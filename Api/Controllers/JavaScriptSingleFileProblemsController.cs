@@ -1,32 +1,12 @@
+using Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Services;
 
 namespace GraderBotReimagined.Controllers;
 
-[ApiController]
 [Route("javascript/single-file/problems")]
-public class JavaScriptSingleFileProblemsController : Controller
+public class JavaScriptSingleFileProblemsController : BaseController
 {
-    [HttpGet]
-    public IActionResult List()
-    {
-        return Json("list here");
-    }
-
-    [HttpGet("{id:required}")]
-    public IActionResult Get(string id)
-    {
-        return Json(id);
-    }
-    
-    [HttpPost]
-    public IActionResult Create()
-    {
-        return Json($"created: {DateTime.Now}");
-    }
-
-    [HttpDelete("{id:required}")]
-    public IActionResult Delete(string id)
-    {
-        return Json($"deleted: {DateTime.Now}");
-    }
+    public JavaScriptSingleFileProblemsController(IProcessStarter processStarter) : base(new JavaScriptSingleFileConsoleApp(processStarter))
+    { }
 }

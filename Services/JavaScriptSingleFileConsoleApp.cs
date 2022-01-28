@@ -5,33 +5,35 @@ using Utilities;
 
 namespace Services;
 
-public class JavaScriptSingleFileConsoleApp: IConsoleApp
+public class JavaScriptSingleFileConsoleApp : IApp
 {
-    private readonly IProgramRunner _programRunner;
+    private readonly IProcessStarter _processStarter;
 
-    public JavaScriptSingleFileConsoleApp(IProgramRunner programRunner)
+    public JavaScriptSingleFileConsoleApp(IProcessStarter processStarter)
     {
-        _programRunner = programRunner;
+        _processStarter = processStarter;
     }
 
     public async Task<Result<string, Exception>> RunAsync(DirectoryInfo directory, string input)
     {
         var file = directory.GetFiles().FirstOrDefault();
-        if (file is null) return new ErrorResult<string, Exception> { None = new FileNotFoundException("Could not find solution file")};
+        if (file is null)
+            return new ErrorResult<string, Exception>(new FileNotFoundException("Could not find solution file"));
 
         var jsonArgs = GetArgsAsJsonArray(input);
         var mainJs = await CreateMainJsAsync(directory, file, jsonArgs);
 
-        var process = _programRunner.Run("node", mainJs);
+        var process = (_processStarter.Start("node", mainJs) as SuccessResult<Process, bool>)!.Some;
 
-        if (await WaitForSuccessfulExitAsync(process) is ErrorResult<string, Exception> result) return result;
+        if (await WaitForSuccessfulExitAsync(process) is ErrorResult<bool, Exception> result)
+            return new ErrorResult<string, Exception>(result.None);
 
         var output = $"{await process.StandardOutput.ReadToEndAsync()}".Trim();
         File.Delete(mainJs);
-        return new SuccessResult<string, Exception> { Some = output };
+        return new SuccessResult<string, Exception>(output);
     }
 
-    private static async Task<Result<string, Exception>> WaitForSuccessfulExitAsync(Process process)
+    private static async Task<Result<bool, Exception>> WaitForSuccessfulExitAsync(Process process)
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(128));
         try
@@ -41,16 +43,16 @@ public class JavaScriptSingleFileConsoleApp: IConsoleApp
         catch (Exception exception)
         {
             var error = await process.StandardError.ReadToEndAsync();
-            return new ErrorResult<string, Exception> {None = new Exception(error, exception)};
+            return new ErrorResult<bool, Exception>(new Exception(error, exception));
         }
 
         if (process.ExitCode != 0)
         {
             var error = await process.StandardError.ReadToEndAsync();
-            return new ErrorResult<string, Exception> {None = new Exception(error)};
+            return new ErrorResult<bool, Exception>(new Exception(error));
         }
 
-        return new SuccessResult<string, Exception>();
+        return new SuccessResult<bool, Exception>(true);
     }
 
     private static string GetArgsAsJsonArray(string input)

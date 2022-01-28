@@ -10,7 +10,7 @@ namespace Tests.ConsoleApp;
 
 public class JavaScriptSingleFileConsoleAppUnitTests
 {
-    private readonly IConsoleApp _consoleApp = new JavaScriptSingleFileConsoleApp(new ProgramRunner());
+    private readonly IApp _app = new JavaScriptSingleFileConsoleApp(new ProcessStarter());
     private DirectoryInfo _solutionDir = null!;
     private const string TempDir = "js-ca-test";
 
@@ -34,7 +34,7 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     {
         await CreateMainFunction(function);
         var result =
-            await _consoleApp.RunAsync(_solutionDir, "first string\r\nsome number next\r\n123") as
+            await _app.RunAsync(_solutionDir, "first string\r\nsome number next\r\n123") as
                 ErrorResult<string, Exception>;
 
         Assert.IsNotNull(result);
@@ -56,7 +56,7 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     {
         await CreateMainFunction(function);
         var result =
-            await _consoleApp.RunAsync(_solutionDir, input) as
+            await _app.RunAsync(_solutionDir, input) as
                 SuccessResult<string, Exception>;
 
         Assert.IsNotNull(result);
@@ -70,7 +70,7 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     {
         await CreateMainFunction("console.log");
         var result =
-            await _consoleApp.RunAsync(_solutionDir, input) as
+            await _app.RunAsync(_solutionDir, input) as
                 SuccessResult<string, Exception>;
 
         Assert.IsNotNull(result);

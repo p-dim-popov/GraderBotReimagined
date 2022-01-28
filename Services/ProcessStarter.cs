@@ -4,11 +4,11 @@ using Utilities;
 
 namespace Services;
 
-public class ProgramRunner: IProgramRunner
+public class ProcessStarter: IProcessStarter
 {
-    public Process Run(string program, params string[]? args)
+    public Result<Process, bool> Start(string program, params string[]? args)
     {
-        var runner = new Process
+        var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
@@ -18,12 +18,14 @@ public class ProgramRunner: IProgramRunner
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
                 UseShellExecute = false,
-                CreateNoWindow = false,
+                CreateNoWindow = true,
             },
             EnableRaisingEvents = true,
         };
 
-        runner.Start();
-        return runner;
+        var isStartSuccess = process.Start();
+        return isStartSuccess
+            ? new SuccessResult<Process, bool>(process)
+            : new ErrorResult<Process, bool>(false);
     }
 }

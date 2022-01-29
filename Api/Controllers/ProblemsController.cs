@@ -4,29 +4,29 @@ namespace GraderBotReimagined.Controllers;
 
 [ApiController]
 [Route("{programmingLanguage}/{problemType}/problems")]
-public class ProblemsController: Controller
+public class ProblemsController: ControllerBase
 {
     [HttpGet]
-    public IActionResult List()
+    public dynamic List()
     {
-        return Json("listing");
+        return "listing";
     }
 
     [HttpGet("{id:required}")]
-    public IActionResult Get(string id)
+    public dynamic Get(string id)
     {
-        return Json(id);
+        return id;
     }
     
     [HttpPost]
-    public IActionResult Create()
+    public dynamic Create()
     {
-        return Json($"created: {DateTime.Now}");
+        return $"created: {DateTime.Now}";
     }
 
     [HttpDelete("{id:required}")]
-    public IActionResult Delete(string id)
+    public dynamic Delete(string id)
     {
-        return Json($"deleted: {DateTime.Now}");
+        return $"deleted: {DateTime.Now}";
     }
 }

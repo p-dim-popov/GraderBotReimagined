@@ -4,23 +4,23 @@ namespace GraderBotReimagined.Controllers;
 
 [ApiController]
 [Route("{programmingLanguage}/{problemType}/problems/{problemId}/solutions")]
-public class ProblemSolutionsController: Controller
+public class ProblemSolutionsController: ControllerBase
 {
     [HttpGet]
-    public IActionResult List(string problemId)
+    public dynamic List(string problemId)
     {
-        return Json($"problemId: {problemId}");
+        return $"problemId: {problemId}";
     }
 
     [HttpGet("{id}")]
-    public IActionResult Preview(string problemId, string id)
+    public dynamic Preview(string problemId, string id)
     {
-        return Json($"problemId: {problemId}, id: {id}");
+        return $"problemId: {problemId}, id: {id}";
     }
     
     [HttpPost]
-    public IActionResult Submit(string problemId)
+    public dynamic Submit(string problemId)
     {
-        return Json($"{problemId}, submitted: {DateTime.Now}");
+        return $"{problemId}, submitted: {DateTime.Now}";
     }
 }

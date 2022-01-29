@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace GraderBotReimagined.Controllers;
 
 [ApiController]
-public abstract class BaseController: Controller
+public abstract class ProblemsController: Controller
 {
     private IApp _app;
 
-    protected BaseController(IApp app)
+    protected ProblemsController(IApp app)
     {
         _app = app;
     }

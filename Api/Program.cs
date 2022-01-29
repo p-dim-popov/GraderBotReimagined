@@ -1,5 +1,6 @@
 using Contracts;
 using Data.DbContexts;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    app.UseSpa(spa =>
+    {
+        spa.Options.PackageManagerCommand = "yarn";
+        spa.Options.SourcePath = "ClientApp";
+        spa.Options.DevServerPort = 3003;
+        spa.UseReactDevelopmentServer("dev");        
+    });
 }
 
 app.UseHttpsRedirection();

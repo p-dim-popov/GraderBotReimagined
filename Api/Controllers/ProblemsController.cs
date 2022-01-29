@@ -1,22 +1,15 @@
-using Contracts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GraderBotReimagined.Controllers;
 
 [ApiController]
-public abstract class ProblemsController: Controller
+[Route("{programmingLanguage}/{problemType}/problems")]
+public class ProblemsController: Controller
 {
-    private IApp _app;
-
-    protected ProblemsController(IApp app)
-    {
-        _app = app;
-    }
-
     [HttpGet]
     public IActionResult List()
     {
-        return Json("list here");
+        return Json("listing");
     }
 
     [HttpGet("{id:required}")]

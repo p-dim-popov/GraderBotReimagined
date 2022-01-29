@@ -12,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// TODO: add a real db at some point
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<AppDbContext, LocalDbContext>();

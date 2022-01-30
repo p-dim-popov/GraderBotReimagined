@@ -1,6 +1,6 @@
-using Utilities;
+using Core.Types;
 
-namespace Contracts;
+namespace Runners.Abstractions;
 
 public interface IApp
 {

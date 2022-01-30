@@ -15,10 +15,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Contracts\Contracts.csproj" />
+      <ProjectReference Include="..\Core.Utilities\Core.Utilities.csproj" />
+      <ProjectReference Include="..\Core\Core.csproj" />
       <ProjectReference Include="..\Data\Data.csproj" />
-      <ProjectReference Include="..\Services\Services.csproj" />
-      <ProjectReference Include="..\Utilities\Utilities.csproj" />
+      <ProjectReference Include="..\Helpers\Helpers.csproj" />
+      <ProjectReference Include="..\Runners.Abstractions\Runners.Abstractions.csproj" />
+      <ProjectReference Include="..\Runners\Runners.csproj" />
     </ItemGroup>
 
 </Project>

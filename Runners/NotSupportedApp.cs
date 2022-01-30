@@ -1,7 +1,7 @@
-using Contracts;
-using Utilities;
+using Core.Types;
+using Runners.Abstractions;
 
-namespace Services;
+namespace Runners;
 
 public class NotSupportedApp: IApp
 {

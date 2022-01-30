@@ -1,16 +1,16 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Contracts;
+using Core.Types;
+using Core.Utilities;
+using Helpers;
 using NUnit.Framework;
-using Services;
-using Utilities;
 
-namespace Tests.ConsoleApp;
+namespace Runners.Tests;
 
 public class JavaScriptSingleFileConsoleAppUnitTests
 {
-    private readonly IApp _app = new JavaScriptSingleFileConsoleApp(new ProcessStarter());
+    private readonly JavaScriptSingleFileConsoleApp _app = new(new ProcessStarter());
     private DirectoryInfo _solutionDir = null!;
     private const string TempDir = "js-ca-test";
 

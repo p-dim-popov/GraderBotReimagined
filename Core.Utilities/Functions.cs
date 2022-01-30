@@ -1,4 +1,4 @@
-namespace Utilities;
+namespace Core.Utilities;
 
 public static class FileOps
 {

@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using Contracts;
-using Utilities;
+using Core.Types;
+using Core.Utilities;
+using Helpers;
+using Runners.Abstractions;
 
-namespace Services;
+namespace Runners;
 
 public class JavaScriptSingleFileConsoleApp : IApp
 {

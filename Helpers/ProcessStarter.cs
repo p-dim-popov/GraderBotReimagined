@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using Contracts;
-using Utilities;
+using Core.Types;
+using Core.Utilities;
 
-namespace Services;
+namespace Helpers;
 
 public class ProcessStarter: IProcessStarter
 {

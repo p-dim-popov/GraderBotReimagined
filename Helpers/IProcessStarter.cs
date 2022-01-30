@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using Utilities;
+using Core.Types;
 
-namespace Contracts;
+namespace Helpers;
 
 public interface IProcessStarter
 {

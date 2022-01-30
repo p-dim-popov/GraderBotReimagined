@@ -1,4 +1,4 @@
-﻿namespace Utilities;
+﻿namespace Core.Types;
 
 public record Result<TSuccess, TError>();
 

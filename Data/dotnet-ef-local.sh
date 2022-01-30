@@ -5,4 +5,4 @@ command=$*
 dotnet ef $command \
   -p=Data \
   -c=LocalDbContext \
-  "$([[ "$command" =~ 'migrations add' ]] && echo '-o=LocalMigrations')"
+  $([[ "$command" =~ 'migrations add' ]] && echo '-o=LocalMigrations')

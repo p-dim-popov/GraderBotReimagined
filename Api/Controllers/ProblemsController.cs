@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace GraderBotReimagined.Controllers;
+namespace Api.Controllers;
 
 [ApiController]
 [Route("{programmingLanguage}/{problemType}/problems")]

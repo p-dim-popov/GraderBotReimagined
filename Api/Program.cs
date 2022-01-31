@@ -1,74 +1,54 @@
-using Data.DbContexts;
+using Api;
+using Api.Services;
 using Helpers;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Runners;
-using Runners.Abstractions;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// TODO: add a real db at some point
-if (builder.Environment.IsDevelopment())
+builder.Services.AddSwaggerGen(swaggerGenOptions =>
 {
-    builder.Services.AddDbContext<AppDbContext, LocalDbContext>();
-}
-
-builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddTransient<IProcessStarter, ProcessStarter>();
-builder.Services.AddScoped<IApp>(serviceProvider =>
-{
-    var routeValues = serviceProvider.GetRequiredService<IHttpContextAccessor>()
-        .HttpContext
-        !.Request
-        .RouteValues;
-
-    string? GetProblemType()
+    var bearerScheme = new OpenApiSecurityScheme
     {
-        return routeValues?["problemType"]?.ToString()?.ToLower();
-    }
-
-    var processStarter = serviceProvider.GetService<IProcessStarter>()!;
-    return routeValues["programmingLanguage"]?.ToString()?.ToLower() switch
-    {
-        "javascript" => GetProblemType() switch
-        {
-            "single-file" => new JavaScriptSingleFileConsoleApp(processStarter),
-            { } type => new NotSupportedApp { Type = type },
-            _ => new NotSupportedApp(),
-        },
-        { } language => new NotSupportedApp { Language = language },
-        _ => new NotSupportedApp(),
+        In = ParameterLocation.Header,
+        Description = "Please enter into field the word 'Bearer' following by space and JWT",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "bearer",
     };
+    swaggerGenOptions.AddSecurityDefinition("Bearer", bearerScheme);
+    swaggerGenOptions.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            }, new List<string>()
+        },
+    });
 });
 
+builder.Services
+    .AddConvenientDbContext(builder.Environment.IsDevelopment())
+    .AddTransient<IProcessStarter, ProcessStarter>()
+    .AddGradableAppProvider()
+    .AddScoped<IUserService, UserService>()
+    .AddAuth();
+
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    
-    app.UseSpa(spa =>
-    {
-        spa.Options.PackageManagerCommand = "yarn";
-        spa.Options.SourcePath = "ClientApp";
-        spa.Options.DevServerPort = 3003;
-        spa.UseReactDevelopmentServer("dev");        
-    });
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+app.UseSwaggerDocsWhen(app.Environment.IsDevelopment())
+    .UseClientSideAppDevelopmentServerWhen(app.Environment.IsDevelopment())
+    .UseHttpsRedirection()
+    .UseAuth();
 
 app.MapControllers();
-
 app.Run();

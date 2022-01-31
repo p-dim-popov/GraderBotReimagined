@@ -1,6 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GraderBotReimagined.Controllers;
+namespace Api.Controllers;
 
 [ApiController]
 [Route("{programmingLanguage}/{problemType}/problems")]
@@ -17,13 +18,15 @@ public class ProblemsController: ControllerBase
     {
         return id;
     }
-    
+
+    [Authorize(Roles = "Administrator")]
     [HttpPost]
     public dynamic Create()
     {
         return $"created: {DateTime.Now}";
     }
 
+    [Authorize(Roles = "Administrator")]
     [HttpDelete("{id:required}")]
     public dynamic Delete(string id)
     {

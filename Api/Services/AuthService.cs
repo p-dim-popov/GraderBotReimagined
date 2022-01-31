@@ -1,32 +1,21 @@
 using Api.Helpers.Authorization;
 using Api.Models;
+using Api.Services.Abstractions;
 using Data.DbContexts;
 using Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
-public interface IUserService
-{
-    Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model);
-
-    Task<User?> FindByEmailAsync(string email);
-
-    Task<User?> FindByIdAsync(string id);
-    Task<User?> FindByIdAsync(Guid id);
-
-    Task RegisterAsync(RegisterRequest model);
-}
-
-public class UserService : IUserService
+public class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
     private readonly IJwtUtils _jwtUtils;
 
-    public UserService(
+    public AuthService(
         AppDbContext context,
         IJwtUtils jwtUtils
-        )
+    )
     {
         _context = context;
         _jwtUtils = jwtUtils;

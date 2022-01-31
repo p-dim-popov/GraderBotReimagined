@@ -1,5 +1,4 @@
 using Api;
-using Api.Services;
 using Helpers;
 using Microsoft.OpenApi.Models;
 
@@ -41,7 +40,6 @@ builder.Services
     .AddConvenientDbContext(builder.Environment.IsDevelopment())
     .AddTransient<IProcessStarter, ProcessStarter>()
     .AddGradableAppProvider()
-    .AddScoped<IUserService, UserService>()
     .AddAuth();
 
 var app = builder.Build();

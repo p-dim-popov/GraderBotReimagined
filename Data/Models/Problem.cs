@@ -6,12 +6,12 @@ namespace Data.Models;
 public class Problem
 {
     public Guid Id { get; set; }
-    
+
     public Guid AuthorId { get; set; }
     public User Author { get; set; }
 
     public ProblemType Type { get; set; }
-    
+
     [Column(TypeName = "TEXT")]
     public string Description { get; set; }
 

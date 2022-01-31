@@ -1,5 +1,5 @@
 using Api.Models;
-using Api.Services;
+using Api.Services.Abstractions;
 using Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,9 +11,9 @@ namespace Api.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IAuthService _userService;
 
-    public AuthController(IUserService userService)
+    public AuthController(IAuthService userService)
     {
         _userService = userService;
     }

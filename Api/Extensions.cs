@@ -1,10 +1,11 @@
 using System.Text;
 using Api.Helpers.Authorization;
+using Api.Services;
+using Api.Services.Abstractions;
 using Data.DbContexts;
 using Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Runners;
 using Runners.Abstractions;
@@ -68,6 +69,8 @@ public static class ServiceCollectionExtensions
                     ValidateAudience = false,
                 };
             });
+
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Api.Models;
+namespace Api.Models.Auth;
 
-public class AuthenticateRequest
+public class LoginRequest
 {
     [Required]
     public string Email { get; set; }

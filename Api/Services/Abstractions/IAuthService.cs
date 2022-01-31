@@ -1,11 +1,12 @@
 using Api.Models;
+using Api.Models.Auth;
 using Data.Models;
 
 namespace Api.Services.Abstractions;
 
 public interface IAuthService
 {
-    Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model);
+    Task<LoginResponse> AuthenticateAsync(LoginRequest model);
 
     Task<User?> FindByEmailAsync(string email);
 

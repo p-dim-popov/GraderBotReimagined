@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Api.Models;
+namespace Api.Models.Auth;
 
 public class RegisterRequest
 {

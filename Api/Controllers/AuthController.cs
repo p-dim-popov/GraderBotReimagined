@@ -1,4 +1,5 @@
 using Api.Models;
+using Api.Models.Auth;
 using Api.Services.Abstractions;
 using Data.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login(AuthenticateRequest model)
+    public async Task<IActionResult> Login(LoginRequest model)
     {
         var response = await _userService.AuthenticateAsync(model);
         return Ok(response);

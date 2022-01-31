@@ -1,6 +1,6 @@
-namespace Api.Models;
+namespace Api.Models.Auth;
 
-public class AuthenticateResponse
+public class LoginResponse
 {
     public Guid Id { get; set; }
 

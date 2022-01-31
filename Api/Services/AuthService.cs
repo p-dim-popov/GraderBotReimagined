@@ -1,5 +1,6 @@
 using Api.Helpers.Authorization;
 using Api.Models;
+using Api.Models.Auth;
 using Api.Services.Abstractions;
 using Data.DbContexts;
 using Data.Models;
@@ -21,7 +22,7 @@ public class AuthService : IAuthService
         _jwtUtils = jwtUtils;
     }
 
-    public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model)
+    public async Task<LoginResponse> AuthenticateAsync(LoginRequest model)
     {
         var user = await _context.Users
             .Include(x => x.Roles)
@@ -31,7 +32,7 @@ public class AuthService : IAuthService
         if (user is null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             throw new BadHttpRequestException("Username or password is incorrect");
 
-        var response = new AuthenticateResponse
+        var response = new LoginResponse
         {
             Email = user.Email,
             Id = user.Id,

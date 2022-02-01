@@ -1,12 +1,28 @@
+using Api.Helpers;
+using Api.Helpers.Authorization;
+using Api.Models.Problem;
+using Api.Services.Abstractions;
+using Core.Types;
+using Core.Utilities;
+using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Runners.Abstractions;
 
 namespace Api.Controllers;
 
+[AttachProblemType]
 [ApiController]
-[Route("{programmingLanguage}/{problemType}/problems")]
-public class ProblemsController: ControllerBase
+[Route("{programmingLanguage:required}/{problemType:required}/problems")]
+public class ProblemsController : ControllerBase
 {
+    private readonly IProblemsService _problemsService;
+
+    public ProblemsController(IProblemsService problemsService)
+    {
+        _problemsService = problemsService;
+    }
+
     [HttpGet]
     public dynamic List()
     {
@@ -21,9 +37,22 @@ public class ProblemsController: ControllerBase
 
     [Authorize(Roles = "Administrator")]
     [HttpPost]
-    public dynamic Create()
+    public async Task<IActionResult> Create([FromForm] ProblemCreateRequest request)
     {
-        return $"created: {DateTime.Now}";
+        var dto = new ProblemCreateDto(
+            User.GetId(),
+            (ProblemType) HttpContext.Items["ProblemType"]!,
+            request.Title,
+            request.Description,
+            await request.Source.OpenReadStream().CollectAsByteArrayAsync()
+        );
+
+        return await _problemsService.CreateAsync(dto) switch
+        {
+            SuccessResult<bool, Exception> => Ok(),
+            ErrorResult<bool, Exception> { None: { } e } => Problem(e.Message),
+            _ => Problem(),
+        };
     }
 
     [Authorize(Roles = "Administrator")]

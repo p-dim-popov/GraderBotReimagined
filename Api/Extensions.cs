@@ -1,8 +1,10 @@
 using System.Text;
+using Api.Helpers;
 using Api.Helpers.Authorization;
 using Api.Services;
 using Api.Services.Abstractions;
 using Data.DbContexts;
+using Data.Models.Enums;
 using Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -19,24 +21,20 @@ public static class ServiceCollectionExtensions
             .AddHttpContextAccessor()
             .AddScoped<IApp>(serviceProvider =>
             {
-                var routeValues = serviceProvider.GetRequiredService<IHttpContextAccessor>()
-                    .HttpContext
-                    !.Request
-                    .RouteValues;
+                var context = serviceProvider
+                    .GetRequiredService<IHttpContextAccessor>()
+                    .HttpContext;
+                var routeValues = context!.Request.RouteValues;
 
-                string? GetProblemType() => routeValues["problemType"]?.ToString()?.ToLower();
-
+                var language = routeValues["programmingLanguage"]?.ToString()?.ToLower();
+                var type = routeValues["problemType"]?.ToString()?.ToLower();
                 var processStarter = serviceProvider.GetService<IProcessStarter>()!;
-                return routeValues["programmingLanguage"]?.ToString()?.ToLower() switch
+                var problemType = ProblemTypeResolver.Resolve(language, type);
+
+                return problemType switch
                 {
-                    "javascript" => GetProblemType() switch
-                    {
-                        "single-file" => new JavaScriptSingleFileConsoleApp(processStarter),
-                        { } type => new NotSupportedApp {Type = type},
-                        _ => new NotSupportedApp(),
-                    },
-                    { } language => new NotSupportedApp {Language = language},
-                    _ => new NotSupportedApp(),
+                    ProblemType.JavaScriptSingleFile => new JavaScriptSingleFileConsoleApp(processStarter),
+                    _ => new NotSupportedApp {Language = language, Type = type},
                 };
             });
 

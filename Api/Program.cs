@@ -1,4 +1,6 @@
 using Api;
+using Api.Services;
+using Api.Services.Abstractions;
 using Helpers;
 using Microsoft.OpenApi.Models;
 
@@ -39,6 +41,7 @@ builder.Services.AddSwaggerGen(swaggerGenOptions =>
 builder.Services
     .AddConvenientDbContext(builder.Environment.IsDevelopment())
     .AddTransient<IProcessStarter, ProcessStarter>()
+    .AddScoped<IProblemsService, ProblemsService>()
     .AddGradableAppProvider()
     .AddAuth();
 

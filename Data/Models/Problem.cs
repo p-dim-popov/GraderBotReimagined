@@ -12,6 +12,8 @@ public class Problem
 
     public ProblemType Type { get; set; }
 
+    public string Title { get; set; }
+
     [Column(TypeName = "TEXT")]
     public string Description { get; set; }
 

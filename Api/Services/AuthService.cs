@@ -1,5 +1,4 @@
 using Api.Helpers.Authorization;
-using Api.Models;
 using Api.Models.Auth;
 using Api.Services.Abstractions;
 using Data.DbContexts;
@@ -30,22 +29,19 @@ public class AuthService : IAuthService
             .SingleOrDefaultAsync(x => x.Email == model.Email);
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
-            throw new BadHttpRequestException("Username or password is incorrect");
+            throw new BadHttpRequestException("Email or password is incorrect");
 
         var response = new LoginResponse
         {
-            Email = user.Email,
-            Id = user.Id,
             Token = _jwtUtils.GenerateToken(user),
         };
         return response;
     }
 
-    public Task<User?> FindByEmailAsync(string email) => _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+    public IQueryable<User> FindByIdAsync(string id) => FindByIdAsync(Guid.Parse(id));
 
-    public Task<User?> FindByIdAsync(string id) => FindByIdAsync(Guid.Parse(id));
-
-    public Task<User?> FindByIdAsync(Guid id) => _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+    public IQueryable<User> FindByIdAsync(Guid id) => _context.Users
+        .Where(x => x.Id == id);
 
     public async Task RegisterAsync(RegisterRequest model)
     {

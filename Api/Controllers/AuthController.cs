@@ -1,9 +1,9 @@
-using Api.Models;
+using Api.Helpers.Authorization;
 using Api.Models.Auth;
 using Api.Services.Abstractions;
-using Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
@@ -36,9 +36,13 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("profile")]
-    public async Task<User> Profile()
+    public async Task<dynamic> Profile()
     {
-        var user = await _userService.FindByIdAsync(User.Identity!.Name!);
+        var user = await _userService.FindByIdAsync(User.GetId())
+            .Include(x => x.Roles)
+            .ThenInclude(x => x.Role)
+            .Select(x => new { x.Id, x.Email, Roles = x.Roles.Select(y => y.Role.Name)  })
+            .FirstOrDefaultAsync();
         return user!;
     }
 

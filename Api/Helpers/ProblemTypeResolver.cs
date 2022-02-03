@@ -10,7 +10,7 @@ public static class ProblemTypeResolver
         {
             "javascript" => type switch
             {
-                "single-file" => ProblemType.JavaScriptSingleFile,
+                "single-file-console-app" => ProblemType.JavaScriptSingleFileConsoleApp,
                 _ => null,
             },
 

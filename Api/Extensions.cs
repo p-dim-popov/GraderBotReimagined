@@ -27,13 +27,13 @@ public static class ServiceCollectionExtensions
                 var routeValues = context!.Request.RouteValues;
 
                 var language = routeValues["programmingLanguage"]?.ToString()?.ToLower();
-                var type = routeValues["problemType"]?.ToString()?.ToLower();
+                var type = routeValues["solutionType"]?.ToString()?.ToLower();
                 var processStarter = serviceProvider.GetService<IProcessStarter>()!;
                 var problemType = ProblemTypeResolver.Resolve(language, type);
 
                 return problemType switch
                 {
-                    ProblemType.JavaScriptSingleFile => new JavaScriptSingleFileConsoleApp(processStarter),
+                    ProblemType.JavaScriptSingleFileConsoleApp => new JavaScriptSingleFileConsoleApp(processStarter),
                     _ => new NotSupportedApp {Language = language, Type = type},
                 };
             });

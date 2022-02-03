@@ -7,13 +7,12 @@ using Core.Utilities;
 using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Runners.Abstractions;
 
 namespace Api.Controllers;
 
 [AttachProblemType]
 [ApiController]
-[Route("{programmingLanguage:required}/{problemType:required}/problems")]
+[Route("{programmingLanguage:required}/{solutionType:required}/problems")]
 public class ProblemsController : ControllerBase
 {
     private readonly IProblemsService _problemsService;
@@ -61,4 +60,8 @@ public class ProblemsController : ControllerBase
     {
         return $"deleted: {DateTime.Now}";
     }
+
+    [AttachProblemType(Skip = true)]
+    [HttpGet("/problems/types")]
+    public IEnumerable<ProblemTypeDescription> ListAllTypes() => _problemsService.GetAllDescriptions();
 }

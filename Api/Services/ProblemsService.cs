@@ -37,4 +37,6 @@ public class ProblemsService: IProblemsService
             return new ErrorResult<bool, Exception>(e);
         }
     }
+
+    public IEnumerable<ProblemTypeDescription> GetAllDescriptions() => ProblemTypeDescription.List;
 }

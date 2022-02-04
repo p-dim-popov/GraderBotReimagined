@@ -64,4 +64,8 @@ public class ProblemsController : ControllerBase
     [AttachProblemType(Skip = true)]
     [HttpGet("/problems/types")]
     public IEnumerable<ProblemTypeDescription> ListAllTypes() => _problemsService.GetAllDescriptions();
+
+    [AttachProblemType(Skip = true)]
+    [HttpPost("/problems/most-recent")]
+    public async Task<ProblemTypeDescription> GetMostRecent() => await _problemsService.FetchMostRecentAsync(User.GetId());
 }

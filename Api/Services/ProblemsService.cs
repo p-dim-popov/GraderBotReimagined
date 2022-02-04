@@ -3,6 +3,8 @@ using Api.Services.Abstractions;
 using Core.Types;
 using Data.DbContexts;
 using Data.Models;
+using Data.Models.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
@@ -39,4 +41,29 @@ public class ProblemsService: IProblemsService
     }
 
     public IEnumerable<ProblemTypeDescription> GetAllDescriptions() => ProblemTypeDescription.List;
+
+    public async Task<ProblemTypeDescription> FetchMostRecentAsync(Guid userId)
+    {
+        var allSolutionsOrdered = _context.Solutions
+            // TODO: ffs implement IAuditInfo and creation date
+            .OrderBy(x => x.Id);
+
+        var problemType = (userId != Guid.Empty
+                              ? await allSolutionsOrdered
+                                  .Where(x => x.AuthorId == userId)
+                                  .Select(x => x.Problem.Type as ProblemType?)
+                                  .FirstOrDefaultAsync()
+                              : null)
+                          ?? await allSolutionsOrdered
+                              .Select(x => x.Problem.Type)
+                              .FirstOrDefaultAsync();
+
+        return ProblemTypeDescription.List
+            .FirstOrDefault(
+                x => x.Type == problemType,
+
+                // This should never happen when we have at least one solution
+                ProblemTypeDescription.List.First()
+            );
+    }
 }

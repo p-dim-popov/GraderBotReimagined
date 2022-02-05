@@ -66,4 +66,7 @@ public class ProblemsService: IProblemsService
                 ProblemTypeDescription.List.First()
             );
     }
+
+    public IQueryable<Problem> SelectAllOfType(ProblemType type) => _context.Problems
+        .Where(x => x.Type == type);
 }

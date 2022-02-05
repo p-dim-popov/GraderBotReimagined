@@ -1,5 +1,7 @@
 using Api.Models.Problem;
 using Core.Types;
+using Data.Models;
+using Data.Models.Enums;
 
 namespace Api.Services.Abstractions;
 
@@ -10,4 +12,6 @@ public interface IProblemsService
     IEnumerable<ProblemTypeDescription> GetAllDescriptions();
 
     Task<ProblemTypeDescription> FetchMostRecentAsync(Guid id);
+
+    IQueryable<Problem> SelectAllOfType(ProblemType type);
 }

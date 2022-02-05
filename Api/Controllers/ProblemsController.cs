@@ -7,6 +7,7 @@ using Core.Utilities;
 using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
@@ -23,9 +24,19 @@ public class ProblemsController : ControllerBase
     }
 
     [HttpGet]
-    public dynamic List()
+    public async Task<object> List()
     {
-        return new[] { new {} };
+        var problems = await _problemsService.SelectAllOfType(HttpContext.Items["ProblemType"] as ProblemType? ?? 0)
+            .Select(x => new
+            {
+                x.Id,
+                x.Title,
+                x.Description,
+                x.Type,
+                Author = x.Author.Email,
+            })
+            .ToListAsync();
+        return problems;
     }
 
     [HttpGet("{id:required}")]

@@ -11,9 +11,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
-[AttachProblemType]
 [ApiController]
-[Route("problems/{programmingLanguage:required}/{solutionType:required}")]
+[Route("problems")]
 public class ProblemsController : ControllerBase
 {
     private readonly IProblemsService _problemsService;
@@ -23,30 +22,30 @@ public class ProblemsController : ControllerBase
         _problemsService = problemsService;
     }
 
-    [HttpGet]
-    public async Task<object> List()
+    [HttpGet("/{programmingLanguage:required}/{solutionType:required}/problems")]
+    [AttachProblemType]
+    public async Task<List<ProblemResponse>> List()
     {
-        var problems = await _problemsService.SelectAllOfType(HttpContext.Items["ProblemType"] as ProblemType? ?? 0)
-            .Select(x => new
-            {
-                x.Id,
-                x.Title,
-                x.Description,
-                x.Type,
-                Author = x.Author.Email,
-            })
+        var problems = await _problemsService.GetFilteredByType(HttpContext.Items["ProblemType"] as ProblemType? ?? 0)
+            .Select(x => new ProblemResponse(
+                x.Id, x.Title, x.Description, x.Type, x.Author.Email
+            ))
             .ToListAsync();
         return problems;
     }
 
-    [HttpGet("{id:required}")]
-    public dynamic Get(string id)
+    [HttpGet("{id:guid:required}")]
+    public async Task<ProblemResponse?> Get(Guid id)
     {
-        return id;
+        var problem = await _problemsService.GetFilteredById(id)
+            .Select(x => new ProblemResponse(x.Id, x.Title, x.Description, x.Type, x.Author.Email))
+            .FirstOrDefaultAsync();
+        return problem;
     }
 
     [Authorize(Roles = "Administrator")]
-    [HttpPost]
+    [HttpPost("/{programmingLanguage:required}/{solutionType:required}/problems")]
+    [AttachProblemType]
     public async Task<IActionResult> Create([FromForm] ProblemCreateRequest request)
     {
         var dto = new ProblemCreateDto(

@@ -67,6 +67,9 @@ public class ProblemsService: IProblemsService
             );
     }
 
-    public IQueryable<Problem> SelectAllOfType(ProblemType type) => _context.Problems
+    public IQueryable<Problem> GetFilteredByType(ProblemType type) => _context.Problems
         .Where(x => x.Type == type);
+
+    public IQueryable<Problem> GetFilteredById(Guid id) => _context.Problems
+        .Where(x => x.Id == id);
 }

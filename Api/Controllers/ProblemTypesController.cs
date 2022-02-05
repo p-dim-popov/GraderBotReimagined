@@ -7,11 +7,11 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route("problems/types")]
-public class ProblemsTypesController: ControllerBase
+public class ProblemTypesController: ControllerBase
 {
     private readonly IProblemsService _problemsService;
 
-    public ProblemsTypesController(IProblemsService problemsService)
+    public ProblemTypesController(IProblemsService problemsService)
     {
         _problemsService = problemsService;
     }

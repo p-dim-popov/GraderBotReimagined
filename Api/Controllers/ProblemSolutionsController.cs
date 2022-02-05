@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [ApiController]
-[Route("problems/{programmingLanguage:required}/{solutionType:required}/{problemId}/solutions")]
+[Route("solutions")]
 public class ProblemSolutionsController: ControllerBase
 {
     [HttpGet("{id}")]
@@ -12,7 +12,7 @@ public class ProblemSolutionsController: ControllerBase
         return $"problemId: {problemId}, id: {id}";
     }
 
-    [HttpPost]
+    [HttpPost("/problems/{problemId:required}/solutions")]
     public dynamic Submit(string problemId)
     {
         return $"{problemId}, submitted: {DateTime.Now}";

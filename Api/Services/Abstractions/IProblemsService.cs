@@ -13,5 +13,7 @@ public interface IProblemsService
 
     Task<ProblemTypeDescription> FetchMostRecentAsync(Guid id);
 
-    IQueryable<Problem> SelectAllOfType(ProblemType type);
+    IQueryable<Problem> GetFilteredByType(ProblemType type);
+
+    IQueryable<Problem> GetFilteredById(Guid id);
 }

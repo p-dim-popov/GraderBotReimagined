@@ -3,17 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [ApiController]
-[Route("{programmingLanguage:required}/{solutionType:required}/problems/{problemId}/solutions")]
+[Route("problems/{programmingLanguage:required}/{solutionType:required}/{problemId}/solutions")]
 public class ProblemSolutionsController: ControllerBase
 {
-    [HttpGet]
-    public dynamic List(string problemId)
-    {
-        return $"problemId: {problemId}";
-    }
-
     [HttpGet("{id}")]
-    public dynamic Preview(string problemId, string id)
+    public dynamic GetById(string problemId, string id)
     {
         return $"problemId: {problemId}, id: {id}";
     }

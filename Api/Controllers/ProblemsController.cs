@@ -12,7 +12,7 @@ namespace Api.Controllers;
 
 [AttachProblemType]
 [ApiController]
-[Route("{programmingLanguage:required}/{solutionType:required}/problems")]
+[Route("problems/{programmingLanguage:required}/{solutionType:required}")]
 public class ProblemsController : ControllerBase
 {
     private readonly IProblemsService _problemsService;
@@ -25,7 +25,7 @@ public class ProblemsController : ControllerBase
     [HttpGet]
     public dynamic List()
     {
-        return "listing";
+        return new[] { new {} };
     }
 
     [HttpGet("{id:required}")]
@@ -60,12 +60,4 @@ public class ProblemsController : ControllerBase
     {
         return $"deleted: {DateTime.Now}";
     }
-
-    [AttachProblemType(Skip = true)]
-    [HttpGet("/problems/types")]
-    public IEnumerable<ProblemTypeDescription> ListAllTypes() => _problemsService.GetAllDescriptions();
-
-    [AttachProblemType(Skip = true)]
-    [HttpGet("/problems/most-recent")]
-    public async Task<ProblemTypeDescription> GetMostRecent() => await _problemsService.FetchMostRecentAsync(User.GetId());
 }

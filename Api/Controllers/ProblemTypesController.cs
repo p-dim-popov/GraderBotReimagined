@@ -2,6 +2,7 @@ using Api.Helpers.Authorization;
 using Api.Models.Problem;
 using Api.Services.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
@@ -22,4 +23,15 @@ public class ProblemTypesController: ControllerBase
     [HttpGet("most-recent")]
     public async Task<ProblemTypeDescription> GetMostRecent() => await _problemsService.FetchMostRecentAsync(User.GetId());
 
+    [HttpGet("resolve")]
+    public async Task<object?> ResolveById([FromQuery] Guid id)
+    {
+        var problemType = await _problemsService.GetFilteredById(id)
+            .Select(x => x.Type)
+            .FirstOrDefaultAsync();
+
+        return _problemsService
+            .GetAllDescriptions()
+            .FirstOrDefault(x => x.Type == problemType);
+    }
 }

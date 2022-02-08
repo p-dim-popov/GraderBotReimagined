@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddGradableAppProvider(this IServiceCollection services) =>
         services
             .AddHttpContextAccessor()
-            .AddScoped<IApp>(serviceProvider =>
+            .AddScoped<ITestableApp>(serviceProvider =>
             {
                 var context = serviceProvider
                     .GetRequiredService<IHttpContextAccessor>()
@@ -33,8 +33,8 @@ public static class ServiceCollectionExtensions
 
                 return problemType switch
                 {
-                    ProblemType.JavaScriptSingleFileConsoleApp => new JavaScriptSingleFileConsoleApp(processStarter),
-                    _ => new NotSupportedApp {Language = language, Type = type},
+                    ProblemType.JavaScriptSingleFileConsoleApp => new JavaScriptSingleFileConsoleTestableApp(processStarter),
+                    _ => new NotSupportedTestableApp {Language = language, Type = type},
                 };
             });
 

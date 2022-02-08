@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Core.Types;
 using Core.Utilities;
@@ -10,7 +12,7 @@ namespace Runners.Tests;
 
 public class JavaScriptSingleFileConsoleAppUnitTests
 {
-    private readonly JavaScriptSingleFileConsoleApp _app = new(new ProcessStarter());
+    private readonly JavaScriptSingleFileConsoleTestableApp _testableApp = new(new ProcessStarter());
     private DirectoryInfo _solutionDir = null!;
     private const string TempDir = "js-ca-test";
 
@@ -33,48 +35,59 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     public async Task CallingFunctionWithErrors_ShouldWorkAsExpected(string function, string expected)
     {
         await CreateMainFunction(function);
-        var result =
-            await _app.RunAsync(_solutionDir, "first string\r\nsome number next\r\n123") as
-                ErrorResult<string, Exception>;
+        var runResult = await _testableApp.TestAsync(
+                _solutionDir,
+                Encoding.UTF8.GetBytes(@"[[""first string"",""some number next"",""123""]]"
+            )) as SuccessResult<Result<string, Exception>[], Exception>;
+        Assert.IsNotNull(runResult);
 
-        Assert.IsNotNull(result);
-        StringAssert.Contains(expected, result!.None.Message);
+        var errorResult = runResult!.Some.FirstOrDefault() as ErrorResult<string, Exception>;
+
+        Assert.IsNotNull(errorResult);
+        StringAssert.Contains(expected, errorResult?.None.Message);
     }
 
     [Test]
     [TestCase(
         "console.log",
-        "first string\r\nsome number next\r\n123",
+        @"[[""first string"",""some number next"",""123""]]",
         "[ 'first string', 'some number next', '123' ]"
     )]
     [TestCase(
         "(input) => input.map(Number).filter(Boolean).filter(x => x % 2).forEach(console.log)",
-        "2\n3\nX\n1\n",
+        @"[[""2"",""3"",""X"",""1""]]",
         "[ 3, 1 ]"
     )]
     public async Task CallingFunctionWithoutErrors_ShouldWorkAsExpected(string function, string input, string expected)
     {
         await CreateMainFunction(function);
-        var result =
-            await _app.RunAsync(_solutionDir, input) as
-                SuccessResult<string, Exception>;
+        var runResult = await _testableApp.TestAsync(
+                _solutionDir,
+                Encoding.UTF8.GetBytes(input)
+                ) as SuccessResult<Result<string, Exception>[], Exception>;
+        Assert.IsNotNull(runResult);
 
-        Assert.IsNotNull(result);
-        StringAssert.Contains(expected, result!.Some);
+        var successResult = runResult?.Some.FirstOrDefault() as SuccessResult<string, Exception>;
+
+        Assert.IsNotNull(successResult);
+        StringAssert.Contains(expected, successResult?.Some);
     }
 
     [Test]
-    [TestCase("trim me", "[ 'trim me' ]")]
-    [TestCase(" do not trim me ", "[ ' do not trim me ' ]")]
+    [TestCase(@"[[""trim me""]]", "[ 'trim me' ]")]
+    [TestCase(@"[["" do not trim me ""]]", "[ ' do not trim me ' ]")]
     public async Task Result_ShouldBeTrimmed(string input, string expected)
     {
         await CreateMainFunction("console.log");
-        var result =
-            await _app.RunAsync(_solutionDir, input) as
-                SuccessResult<string, Exception>;
+        var runResult = await _testableApp.TestAsync(
+            _solutionDir,
+            Encoding.UTF8.GetBytes(input)
+        ) as SuccessResult<Result<string, Exception>[], Exception>;
+        Assert.IsNotNull(runResult);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(expected, result!.Some);
+        var successResult =  runResult?.Some.FirstOrDefault() as SuccessResult<string, Exception>;
+        Assert.IsNotNull(successResult);
+        Assert.AreEqual(expected, successResult?.Some);
     }
 
     private Task CreateMainFunction(string function, string filename = "main.js") =>

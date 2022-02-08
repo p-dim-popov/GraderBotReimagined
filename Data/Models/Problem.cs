@@ -17,5 +17,10 @@ public class Problem
     [Column(TypeName = "TEXT")]
     public string Description { get; set; }
 
-    public byte[] Data { get; set; }
+    public byte[] Source { get; set; }
+
+    public uint? ProblemInputId { get; set; }
+
+    [ForeignKey(nameof(ProblemInputId))]
+    public ProblemInput? Input { get; set; }
 }

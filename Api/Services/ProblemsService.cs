@@ -25,7 +25,7 @@ public class ProblemsService: IProblemsService
             Type = problem.Type,
             Title = problem.Title,
             Description = problem.Description,
-            Data = problem.Source,
+            Source = problem.Source,
         };
 
         try

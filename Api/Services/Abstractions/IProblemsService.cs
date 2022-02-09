@@ -16,4 +16,6 @@ public interface IProblemsService
     IQueryable<Problem> GetFilteredByType(ProblemType type);
 
     IQueryable<Problem> GetFilteredById(Guid id);
+
+    Task<Result<bool, Exception>> DeleteAsync(Problem problem);
 }

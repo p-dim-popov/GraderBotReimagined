@@ -63,7 +63,7 @@ if (app.Environment.IsDevelopment())
     var roles = context.Roles.ToList();
     if (!roles.Any())
     {
-        roles.Add(new Role {Name = "Administrator"});
+        roles.Add(new Role {Name = "Admin"});
         roles.Add(new Role {Name = "Moderator"});
         context.Roles.AddRange(roles);
     }

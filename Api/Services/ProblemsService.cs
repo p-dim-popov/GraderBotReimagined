@@ -86,4 +86,18 @@ public class ProblemsService: IProblemsService
 
     public IQueryable<Problem> GetFilteredById(Guid id) => _context.Problems
         .Where(x => x.Id == id);
+
+    public async Task<Result<bool, Exception>> DeleteAsync(Problem problem)
+    {
+        try
+        {
+            _context.Problems.Remove(problem);
+            await _context.SaveChangesAsync();
+            return new SuccessResult<bool, Exception>(true);
+        }
+        catch (Exception e)
+        {
+            return new ErrorResult<bool, Exception>(e);
+        }
+    }
 }

@@ -103,10 +103,28 @@ public class ProblemsController : ControllerBase
         };
     }
 
-    [Authorize(Roles = "Administrator,Moderator")]
-    [HttpDelete("{id:required}")]
-    public dynamic Delete(string id)
+    [Authorize(Roles = "Admin,Moderator")]
+    [HttpDelete("{id:guid:required}")]
+    public async Task<object> Delete(Guid id)
     {
-        return $"deleted: {DateTime.Now}";
+        var problem = await _problemsService.GetFilteredById(id).FirstOrDefaultAsync();
+        if (problem is null)
+        {
+            return NotFound();
+        }
+
+        if (problem.AuthorId != User.GetId() && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        var result = await _problemsService.DeleteAsync(problem);
+
+        return result switch
+        {
+            SuccessResult<bool, Exception> => Ok(),
+            ErrorResult<bool, Exception> errorResult => Problem(errorResult.None.Message),
+            _ => Problem(),
+        };
     }
 }

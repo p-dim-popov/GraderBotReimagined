@@ -45,7 +45,8 @@ builder.Services
     .AddConvenientDbContext(builder.Environment.IsDevelopment())
     .AddTransient<IProcessStarter, ProcessStarter>()
     .AddScoped<IProblemsService, ProblemsService>()
-    .AddGradableAppProvider()
+    .AddScoped<ISolutionsService, SolutionsService>()
+    .AddScoped<ITestableAppFactory, TestableAppFactory>()
     .AddAuth();
 
 var app = builder.Build();

@@ -13,7 +13,7 @@ public class AppDbContext: DbContext
 
     public DbSet<UserRole> UsersRoles { get; set; }
 
-    public DbSet<OutputValue> OutputValues { get; set; }
+    public DbSet<ResultValue> ResultValues { get; set; }
 
-    public DbSet<SolutionOutput> SolutionsOutputs { get; set; }
+    public DbSet<SolutionResult> SolutionResults { get; set; }
 }

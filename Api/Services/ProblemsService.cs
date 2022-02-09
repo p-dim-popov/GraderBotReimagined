@@ -31,10 +31,10 @@ public class ProblemsService: IProblemsService
                 {
                     AuthorId = problem.AuthorId,
                     Source = problem.Solution.Source,
-                    SolutionOutput = new SolutionOutput
+                    SolutionResult = new SolutionResult
                     {
-                        OutputValues = problem.Solution.Outputs
-                            .Select(x => new OutputValue { Value = x })
+                        ResultValues = problem.Solution.Outputs
+                            .Select(x => new ResultValue { Value = x })
                             .ToList()
                     },
                     IsAuthored = true,

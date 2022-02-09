@@ -110,7 +110,7 @@ namespace Data.LocalMigrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SolutionsOutputs",
+                name: "SolutionResults",
                 columns: table => new
                 {
                     Id = table.Column<uint>(type: "INTEGER", nullable: false)
@@ -119,9 +119,9 @@ namespace Data.LocalMigrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SolutionsOutputs", x => x.Id);
+                    table.PrimaryKey("PK_SolutionResults", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SolutionsOutputs_Solutions_SolutionId",
+                        name: "FK_SolutionResults_Solutions_SolutionId",
                         column: x => x.SolutionId,
                         principalTable: "Solutions",
                         principalColumn: "Id",
@@ -129,34 +129,41 @@ namespace Data.LocalMigrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OutputValues",
+                name: "ResultValues",
                 columns: table => new
                 {
                     Id = table.Column<uint>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Value = table.Column<string>(type: "TEXT", nullable: false),
-                    SolutionOutputId = table.Column<uint>(type: "INTEGER", nullable: false)
+                    IsSuccess = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SolutionResultId = table.Column<uint>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OutputValues", x => x.Id);
+                    table.PrimaryKey("PK_ResultValues", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OutputValues_SolutionsOutputs_SolutionOutputId",
-                        column: x => x.SolutionOutputId,
-                        principalTable: "SolutionsOutputs",
+                        name: "FK_ResultValues_SolutionResults_SolutionResultId",
+                        column: x => x.SolutionResultId,
+                        principalTable: "SolutionResults",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_OutputValues_SolutionOutputId",
-                table: "OutputValues",
-                column: "SolutionOutputId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Problems_AuthorId",
                 table: "Problems",
                 column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ResultValues_SolutionResultId",
+                table: "ResultValues",
+                column: "SolutionResultId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SolutionResults_SolutionId",
+                table: "SolutionResults",
+                column: "SolutionId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Solutions_AuthorId",
@@ -167,12 +174,6 @@ namespace Data.LocalMigrations
                 name: "IX_Solutions_ProblemId",
                 table: "Solutions",
                 column: "ProblemId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SolutionsOutputs_SolutionId",
-                table: "SolutionsOutputs",
-                column: "SolutionId",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_UsersRoles_RoleId",
@@ -188,13 +189,13 @@ namespace Data.LocalMigrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "OutputValues");
+                name: "ResultValues");
 
             migrationBuilder.DropTable(
                 name: "UsersRoles");
 
             migrationBuilder.DropTable(
-                name: "SolutionsOutputs");
+                name: "SolutionResults");
 
             migrationBuilder.DropTable(
                 name: "Roles");

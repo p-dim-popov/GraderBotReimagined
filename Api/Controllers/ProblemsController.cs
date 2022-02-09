@@ -8,7 +8,6 @@ using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Runners.Abstractions;
 
 namespace Api.Controllers;
 
@@ -24,25 +23,28 @@ public class ProblemsController : ControllerBase
         ));
 
     private readonly IProblemsService _problemsService;
-    private readonly ITestableApp _testableApp;
+    private readonly ITestableAppFactory _testableAppFactory;
 
-    public ProblemsController(IProblemsService problemsService, ITestableApp testableApp)
+    public ProblemsController(IProblemsService problemsService, ITestableAppFactory testableAppFactory)
     {
         _problemsService = problemsService;
-        _testableApp = testableApp;
+        _testableAppFactory = testableAppFactory;
     }
 
     [HttpGet("/{programmingLanguage:required}/{solutionType:required}/problems")]
     [AttachProblemType]
-    public async Task<List<ProblemResponse>> List()
-    {
-        var problems = await _problemsService.GetFilteredByType(HttpContext.Items["ProblemType"] as ProblemType? ?? 0)
-            .Select(x => new ProblemResponse(
-                x.Id, x.Title, x.Description, x.Type, x.Author.Email
-            ))
-            .ToListAsync();
-        return problems;
-    }
+    public async Task<ActionResult<List<ProblemResponse>>> List(string programmingLanguage, string solutionType)
+        => ProblemTypeResolver.Resolve(programmingLanguage, solutionType) switch
+        {
+            { } type => Ok(
+                await _problemsService.GetFilteredByType(type)
+                    .Select(x => new ProblemResponse(
+                        x.Id, x.Title, x.Description, x.Type, x.Author.Email
+                    ))
+                    .ToListAsync()
+            ),
+            _ => NotFound()
+        };
 
     [HttpGet("{id:guid:required}")]
     public async Task<ProblemResponse?> Get(Guid id)
@@ -56,7 +58,7 @@ public class ProblemsController : ControllerBase
     [Authorize(Roles = "Moderator")]
     [HttpPost("/{programmingLanguage:required}/{solutionType:required}/problems")]
     [AttachProblemType]
-    public async Task<IActionResult> Create([FromForm] ProblemCreateRequest request)
+    public async Task<IActionResult> Create(string programmingLanguage, string solutionType, [FromForm] ProblemCreateRequest request)
     {
         var solutionDir = _tempDir.CreateSubdirectory($"{DateTime.Now:s}");
 
@@ -66,7 +68,8 @@ public class ProblemsController : ControllerBase
         );
         var (solution, input) = (bytes[0], bytes[1]);
 
-        var runResult = await _testableApp.TestAsync(solutionDir, solution, input);
+        var testableApp = _testableAppFactory.CreateFromDescription(programmingLanguage, solutionType);
+        var runResult = await testableApp.TestAsync(solutionDir, solution, input);
 
         if (runResult is ErrorResult<Result<string, Exception>[], Exception> errorRunResult)
         {

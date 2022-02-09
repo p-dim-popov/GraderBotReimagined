@@ -12,7 +12,7 @@ public class Solution
 
     public byte[] Source { get; set; }
 
-    public SolutionOutput SolutionOutput { get; set; }
+    public SolutionResult SolutionResult { get; set; }
 
     public bool IsAuthored { get; set; }
 }

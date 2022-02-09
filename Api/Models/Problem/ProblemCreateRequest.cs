@@ -9,4 +9,6 @@ public class ProblemCreateRequest
     [Required] public string Description { get; set; }
 
     [Required] public IFormFile Source { get; set; }
+
+    [Required] public IFormFile Input { get; set; }
 }

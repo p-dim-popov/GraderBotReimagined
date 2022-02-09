@@ -17,13 +17,13 @@ namespace Data.LocalMigrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
 
-            modelBuilder.Entity("Data.Models.InputValue", b =>
+            modelBuilder.Entity("Data.Models.OutputValue", b =>
                 {
                     b.Property<uint>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<uint>("ProblemInputId")
+                    b.Property<uint>("SolutionOutputId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Value")
@@ -32,9 +32,9 @@ namespace Data.LocalMigrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProblemInputId");
+                    b.HasIndex("SolutionOutputId");
 
-                    b.ToTable("InputValues");
+                    b.ToTable("OutputValues");
                 });
 
             modelBuilder.Entity("Data.Models.Problem", b =>
@@ -50,10 +50,7 @@ namespace Data.LocalMigrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<uint?>("ProblemInputId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<byte[]>("Source")
+                    b.Property<byte[]>("Input")
                         .IsRequired()
                         .HasColumnType("BLOB");
 
@@ -68,24 +65,7 @@ namespace Data.LocalMigrations
 
                     b.HasIndex("AuthorId");
 
-                    b.HasIndex("ProblemInputId")
-                        .IsUnique();
-
                     b.ToTable("Problems");
-                });
-
-            modelBuilder.Entity("Data.Models.ProblemInput", b =>
-                {
-                    b.Property<uint>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("ProblemId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ProblemsInputs");
                 });
 
             modelBuilder.Entity("Data.Models.Role", b =>
@@ -112,12 +92,15 @@ namespace Data.LocalMigrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
+                    b.Property<bool>("IsAuthored")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("ProblemId")
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Source")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
 
                     b.HasKey("Id");
 
@@ -126,6 +109,23 @@ namespace Data.LocalMigrations
                     b.HasIndex("ProblemId");
 
                     b.ToTable("Solutions");
+                });
+
+            modelBuilder.Entity("Data.Models.SolutionOutput", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SolutionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SolutionId")
+                        .IsUnique();
+
+                    b.ToTable("SolutionsOutputs");
                 });
 
             modelBuilder.Entity("Data.Models.User", b =>
@@ -168,15 +168,15 @@ namespace Data.LocalMigrations
                     b.ToTable("UsersRoles");
                 });
 
-            modelBuilder.Entity("Data.Models.InputValue", b =>
+            modelBuilder.Entity("Data.Models.OutputValue", b =>
                 {
-                    b.HasOne("Data.Models.ProblemInput", "ProblemInput")
-                        .WithMany("InputValues")
-                        .HasForeignKey("ProblemInputId")
+                    b.HasOne("Data.Models.SolutionOutput", "SolutionOutput")
+                        .WithMany("OutputValues")
+                        .HasForeignKey("SolutionOutputId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ProblemInput");
+                    b.Navigation("SolutionOutput");
                 });
 
             modelBuilder.Entity("Data.Models.Problem", b =>
@@ -187,13 +187,7 @@ namespace Data.LocalMigrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Data.Models.ProblemInput", "Input")
-                        .WithOne("Problem")
-                        .HasForeignKey("Data.Models.Problem", "ProblemInputId");
-
                     b.Navigation("Author");
-
-                    b.Navigation("Input");
                 });
 
             modelBuilder.Entity("Data.Models.Solution", b =>
@@ -205,7 +199,7 @@ namespace Data.LocalMigrations
                         .IsRequired();
 
                     b.HasOne("Data.Models.Problem", "Problem")
-                        .WithMany()
+                        .WithMany("Solutions")
                         .HasForeignKey("ProblemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -213,6 +207,17 @@ namespace Data.LocalMigrations
                     b.Navigation("Author");
 
                     b.Navigation("Problem");
+                });
+
+            modelBuilder.Entity("Data.Models.SolutionOutput", b =>
+                {
+                    b.HasOne("Data.Models.Solution", "Solution")
+                        .WithOne("SolutionOutput")
+                        .HasForeignKey("Data.Models.SolutionOutput", "SolutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Solution");
                 });
 
             modelBuilder.Entity("Data.Models.UserRole", b =>
@@ -234,17 +239,25 @@ namespace Data.LocalMigrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Data.Models.ProblemInput", b =>
+            modelBuilder.Entity("Data.Models.Problem", b =>
                 {
-                    b.Navigation("InputValues");
-
-                    b.Navigation("Problem")
-                        .IsRequired();
+                    b.Navigation("Solutions");
                 });
 
             modelBuilder.Entity("Data.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Data.Models.Solution", b =>
+                {
+                    b.Navigation("SolutionOutput")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Data.Models.SolutionOutput", b =>
+                {
+                    b.Navigation("OutputValues");
                 });
 
             modelBuilder.Entity("Data.Models.User", b =>

@@ -17,8 +17,11 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
         _processStarter = processStarter;
     }
 
-    public async Task<Result<Result<string, Exception>[], Exception>> TestAsync(DirectoryInfo directory,
-        byte[] inputBytes)
+    public async Task<Result<Result<string, Exception>[], Exception>> TestAsync(
+        DirectoryInfo workDir,
+        byte[] solution,
+        byte[] inputBytes
+    )
     {
         var jsonInput = Encoding.UTF8.GetString(inputBytes, 0, inputBytes.Length);
         var inputs = JsonSerializer.Deserialize<string[][]>(jsonInput);
@@ -26,19 +29,16 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
 
         var results = await Task.WhenAll(inputs.Select((x, i) =>
         {
-            var workingDirectory = directory.CreateSubdirectory(i.ToString());
-            return RunAsync(directory, workingDirectory, x);
+            var workingDirectory = workDir.CreateSubdirectory(i.ToString());
+            return RunAsync(workingDirectory, solution, x);
         }));
 
         return new SuccessResult<Result<string, Exception>[], Exception>(results);
     }
 
-    private async Task<Result<string, Exception>> RunAsync(DirectoryInfo sourceDirectory, DirectoryInfo workingDirectory, string[] inputLines)
+    private async Task<Result<string, Exception>> RunAsync(DirectoryInfo workingDirectory, byte[] solution, string[] inputLines)
     {
-        var file = sourceDirectory.GetFiles().FirstOrDefault();
-        if (file is null) return new ErrorResult<string, Exception>(new FileNotFoundException("Could not find solution file"));
-
-        var mainJs = await CreateMainJsAsync(workingDirectory, file, inputLines);
+        var mainJs = await CreateMainJsAsync(workingDirectory, solution, inputLines);
 
         var process = (_processStarter.Start("node", mainJs) as SuccessResult<Process, bool>)!.Some;
 
@@ -72,9 +72,9 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
         return new SuccessResult<bool, Exception>(true);
     }
 
-    private static async Task<string> CreateMainJsAsync(DirectoryInfo directory, FileInfo file, string[] args)
+    private static async Task<string> CreateMainJsAsync(DirectoryInfo directory, byte[] solution, string[] args)
     {
-        var function = $"{await File.ReadAllTextAsync(file.FullName)}".Trim();
+        var function = $"{Encoding.UTF8.GetString(solution, 0, solution.Length)}".Trim();
         var mainFnBody = $"({function})(JSON.parse(`{JsonSerializer.Serialize(args)}`))";
         var mainJsFilename = Path.Join(directory.FullName, "__main__.js");
         await FileOps.WriteFileAsync(mainJsFilename, mainFnBody);

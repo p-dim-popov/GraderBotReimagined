@@ -3,13 +3,17 @@ using Runners.Abstractions;
 
 namespace Runners;
 
-public class NotSupportedTestableApp: ITestableApp
+public class NotSupportedTestableApp : ITestableApp
 {
     public string? Language { get; init; }
 
     public string? Type { get; init; }
 
-    public Task<Result<Result<string, Exception>[], Exception>> TestAsync(DirectoryInfo directory, byte[] inputBytes)
+    public Task<Result<Result<string, Exception>[], Exception>> TestAsync(
+        DirectoryInfo workDir,
+        byte[] solution,
+        byte[] inputBytes
+    )
     {
         if (Language is not null)
         {

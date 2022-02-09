@@ -25,7 +25,21 @@ public class ProblemsService: IProblemsService
             Type = problem.Type,
             Title = problem.Title,
             Description = problem.Description,
-            Source = problem.Source,
+            Input = problem.Input,
+            Solutions = new List<Solution> {
+                new()
+                {
+                    AuthorId = problem.AuthorId,
+                    Source = problem.Solution.Source,
+                    SolutionOutput = new SolutionOutput
+                    {
+                        OutputValues = problem.Solution.Outputs
+                            .Select(x => new OutputValue { Value = x })
+                            .ToList()
+                    },
+                    IsAuthored = true,
+                },
+            }
         };
 
         try

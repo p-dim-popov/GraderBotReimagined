@@ -11,13 +11,33 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.LocalMigrations
 {
     [DbContext(typeof(LocalDbContext))]
-    [Migration("20220131074051_Local_AddTitleToProblem")]
-    partial class Local_AddTitleToProblem
+    [Migration("20220209080759_Local_InitialCreate")]
+    partial class Local_InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
+
+            modelBuilder.Entity("Data.Models.OutputValue", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<uint>("SolutionOutputId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SolutionOutputId");
+
+                    b.ToTable("OutputValues");
+                });
 
             modelBuilder.Entity("Data.Models.Problem", b =>
                 {
@@ -28,13 +48,13 @@ namespace Data.LocalMigrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Input")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -74,12 +94,15 @@ namespace Data.LocalMigrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
+                    b.Property<bool>("IsAuthored")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("ProblemId")
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Source")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
 
                     b.HasKey("Id");
 
@@ -88,6 +111,23 @@ namespace Data.LocalMigrations
                     b.HasIndex("ProblemId");
 
                     b.ToTable("Solutions");
+                });
+
+            modelBuilder.Entity("Data.Models.SolutionOutput", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SolutionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SolutionId")
+                        .IsUnique();
+
+                    b.ToTable("SolutionsOutputs");
                 });
 
             modelBuilder.Entity("Data.Models.User", b =>
@@ -130,6 +170,17 @@ namespace Data.LocalMigrations
                     b.ToTable("UsersRoles");
                 });
 
+            modelBuilder.Entity("Data.Models.OutputValue", b =>
+                {
+                    b.HasOne("Data.Models.SolutionOutput", "SolutionOutput")
+                        .WithMany("OutputValues")
+                        .HasForeignKey("SolutionOutputId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SolutionOutput");
+                });
+
             modelBuilder.Entity("Data.Models.Problem", b =>
                 {
                     b.HasOne("Data.Models.User", "Author")
@@ -150,7 +201,7 @@ namespace Data.LocalMigrations
                         .IsRequired();
 
                     b.HasOne("Data.Models.Problem", "Problem")
-                        .WithMany()
+                        .WithMany("Solutions")
                         .HasForeignKey("ProblemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -158,6 +209,17 @@ namespace Data.LocalMigrations
                     b.Navigation("Author");
 
                     b.Navigation("Problem");
+                });
+
+            modelBuilder.Entity("Data.Models.SolutionOutput", b =>
+                {
+                    b.HasOne("Data.Models.Solution", "Solution")
+                        .WithOne("SolutionOutput")
+                        .HasForeignKey("Data.Models.SolutionOutput", "SolutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Solution");
                 });
 
             modelBuilder.Entity("Data.Models.UserRole", b =>
@@ -179,9 +241,25 @@ namespace Data.LocalMigrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Models.Problem", b =>
+                {
+                    b.Navigation("Solutions");
+                });
+
             modelBuilder.Entity("Data.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Data.Models.Solution", b =>
+                {
+                    b.Navigation("SolutionOutput")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Data.Models.SolutionOutput", b =>
+                {
+                    b.Navigation("OutputValues");
                 });
 
             modelBuilder.Entity("Data.Models.User", b =>

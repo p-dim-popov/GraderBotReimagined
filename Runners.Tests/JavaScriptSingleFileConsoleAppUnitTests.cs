@@ -34,10 +34,10 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     [TestCase("unknown", "Error: ")]
     public async Task CallingFunctionWithErrors_ShouldWorkAsExpected(string function, string expected)
     {
-        await CreateMainFunction(function);
         var runResult = await _testableApp.TestAsync(
-                _solutionDir,
-                Encoding.UTF8.GetBytes(@"[[""first string"",""some number next"",""123""]]"
+            _solutionDir,
+            Encoding.UTF8.GetBytes(function),
+            Encoding.UTF8.GetBytes(@"[[""first string"",""some number next"",""123""]]"
             )) as SuccessResult<Result<string, Exception>[], Exception>;
         Assert.IsNotNull(runResult);
 
@@ -60,11 +60,11 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     )]
     public async Task CallingFunctionWithoutErrors_ShouldWorkAsExpected(string function, string input, string expected)
     {
-        await CreateMainFunction(function);
         var runResult = await _testableApp.TestAsync(
-                _solutionDir,
-                Encoding.UTF8.GetBytes(input)
-                ) as SuccessResult<Result<string, Exception>[], Exception>;
+            _solutionDir,
+            Encoding.UTF8.GetBytes(function),
+            Encoding.UTF8.GetBytes(input)
+        ) as SuccessResult<Result<string, Exception>[], Exception>;
         Assert.IsNotNull(runResult);
 
         var successResult = runResult?.Some.FirstOrDefault() as SuccessResult<string, Exception>;
@@ -78,18 +78,15 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     [TestCase(@"[["" do not trim me ""]]", "[ ' do not trim me ' ]")]
     public async Task Result_ShouldBeTrimmed(string input, string expected)
     {
-        await CreateMainFunction("console.log");
         var runResult = await _testableApp.TestAsync(
             _solutionDir,
+            Encoding.UTF8.GetBytes("console.log"),
             Encoding.UTF8.GetBytes(input)
         ) as SuccessResult<Result<string, Exception>[], Exception>;
         Assert.IsNotNull(runResult);
 
-        var successResult =  runResult?.Some.FirstOrDefault() as SuccessResult<string, Exception>;
+        var successResult = runResult?.Some.FirstOrDefault() as SuccessResult<string, Exception>;
         Assert.IsNotNull(successResult);
         Assert.AreEqual(expected, successResult?.Some);
     }
-
-    private Task CreateMainFunction(string function, string filename = "main.js") =>
-        FileOps.WriteFileAsync(Path.Join(_solutionDir.FullName, filename), function);
 }

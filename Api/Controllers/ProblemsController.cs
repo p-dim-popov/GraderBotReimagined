@@ -8,6 +8,7 @@ using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Runners.Abstractions;
 
 namespace Api.Controllers;
 
@@ -15,11 +16,20 @@ namespace Api.Controllers;
 [Route("problems")]
 public class ProblemsController : ControllerBase
 {
-    private readonly IProblemsService _problemsService;
+    private readonly DirectoryInfo _tempDir = Directory.CreateDirectory(
+        Path.Join(
+            Path.GetTempPath(),
+            "problem-tests",
+            $"{DateTime.Now:yyyy-MM-dd}--{Guid.NewGuid()}"
+        ));
 
-    public ProblemsController(IProblemsService problemsService)
+    private readonly IProblemsService _problemsService;
+    private readonly ITestableApp _testableApp;
+
+    public ProblemsController(IProblemsService problemsService, ITestableApp testableApp)
     {
         _problemsService = problemsService;
+        _testableApp = testableApp;
     }
 
     [HttpGet("/{programmingLanguage:required}/{solutionType:required}/problems")]
@@ -43,17 +53,46 @@ public class ProblemsController : ControllerBase
         return problem;
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Moderator")]
     [HttpPost("/{programmingLanguage:required}/{solutionType:required}/problems")]
     [AttachProblemType]
     public async Task<IActionResult> Create([FromForm] ProblemCreateRequest request)
     {
+        var solutionDir = _tempDir.CreateSubdirectory($"{DateTime.Now:s}");
+
+        var bytes = await Task.WhenAll(
+            request.Source.OpenReadStream().CollectAsByteArrayAsync(),
+            request.Input.OpenReadStream().CollectAsByteArrayAsync()
+        );
+        var (solution, input) = (bytes[0], bytes[1]);
+
+        var runResult = await _testableApp.TestAsync(solutionDir, solution, input);
+
+        if (runResult is ErrorResult<Result<string, Exception>[], Exception> errorRunResult)
+        {
+            return BadRequest($"Something happened at execution. Error: {errorRunResult.None.Message}");
+        }
+
+        var successRunResult = runResult as SuccessResult<Result<string, Exception>[], Exception>;
+        var successResults = successRunResult!.Some
+            .OfType<SuccessResult<string, Exception>>()
+            .ToList();
+
+        if (successResults.Count != successRunResult.Some.Length)
+        {
+            return BadRequest("Solution is not working for all the tests");
+        }
+
         var dto = new ProblemCreateDto(
             User.GetId(),
             (ProblemType) HttpContext.Items["ProblemType"]!,
             request.Title,
             request.Description,
-            await request.Source.OpenReadStream().CollectAsByteArrayAsync()
+            input,
+            new ProblemCreateSolutionDto(
+                solution,
+                successResults.Select(x => x.Some).ToArray()
+            )
         );
 
         return await _problemsService.CreateAsync(dto) switch
@@ -64,7 +103,7 @@ public class ProblemsController : ControllerBase
         };
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Administrator,Moderator")]
     [HttpDelete("{id:required}")]
     public dynamic Delete(string id)
     {

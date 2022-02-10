@@ -49,6 +49,8 @@ public class ProblemSolutionsController: ControllerBase
 
         var problem = await _problemsService
             .GetFilteredById(problemId)
+            .Include(x => x.Solutions.Where(y => y.IsAuthored))
+            .ThenInclude(x => x.SolutionResult.ResultValues)
             .FirstOrDefaultAsync();
 
         if (problem is null)
@@ -68,12 +70,13 @@ public class ProblemSolutionsController: ControllerBase
 
         var successRunResult = runResult as SuccessResult<Result<string, Exception>[], Exception>;
 
+        var correctResults = problem.Solutions.First().SolutionResult.ResultValues.ToArray();
         var results = successRunResult.Some
-            .Select(x => x switch
+            .Select((x, i) => x switch
             {
-                SuccessResult<string, Exception> s => new SolutionCreateDto.Attempt(s.Some, true),
-                ErrorResult<string, Exception> e => new SolutionCreateDto.Attempt(e.None.Message, false),
-                _ => new SolutionCreateDto.Attempt("", false),
+                SuccessResult<string, Exception> s => new SolutionCreateDto.Attempt(s.Some, s.Some != correctResults[i].Value ? correctResults[i].Value : null),
+                ErrorResult<string, Exception> e => new SolutionCreateDto.Attempt(e.None.Message, correctResults[i].Value),
+                _ => new SolutionCreateDto.Attempt("", correctResults[i].Value),
             })
             .ToList();
 

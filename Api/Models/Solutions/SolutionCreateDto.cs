@@ -11,6 +11,6 @@ public record SolutionCreateDto(
 {
     public record Attempt(
         string Output,
-        bool IsSuccess
+        string? CorrectOutput = null
     );
 };

@@ -25,7 +25,7 @@ public class SolutionsService: ISolutionsService
             SolutionResult = new SolutionResult
             {
                 ResultValues = solution.Result
-                    .Select(x => new ResultValue{Value = x.Output, IsSuccess = x.IsSuccess})
+                    .Select(x => new ResultValue{Value = x.Output, IsSuccess = x.CorrectOutput is null})
                     .ToList()
             }
         };

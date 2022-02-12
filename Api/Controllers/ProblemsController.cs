@@ -7,44 +7,148 @@ using Core.Utilities;
 using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Runners.Abstractions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
-[AttachProblemType]
 [ApiController]
-[Route("{programmingLanguage:required}/{problemType:required}/problems")]
+[Route("problems")]
 public class ProblemsController : ControllerBase
 {
-    private readonly IProblemsService _problemsService;
+    private readonly DirectoryInfo _tempDir = Directory.CreateDirectory(
+        Path.Join(
+            Path.GetTempPath(),
+            "problem-tests",
+            $"{DateTime.Now:yyyy-MM-dd}--{Guid.NewGuid()}"
+        ));
 
-    public ProblemsController(IProblemsService problemsService)
+    private readonly IProblemsService _problemsService;
+    private readonly ITestableAppFactory _testableAppFactory;
+
+    public ProblemsController(IProblemsService problemsService, ITestableAppFactory testableAppFactory)
     {
         _problemsService = problemsService;
+        _testableAppFactory = testableAppFactory;
     }
 
-    [HttpGet]
-    public dynamic List()
+    [HttpGet("/{programmingLanguage:required}/{solutionType:required}/problems")]
+    [AttachProblemType]
+    public async Task<ActionResult<List<ProblemResponse>>> List(string programmingLanguage, string solutionType)
     {
-        return "listing";
+        var type = ProblemTypeResolver.Resolve(programmingLanguage, solutionType);
+
+        var problems = type switch
+        {
+            { } t => await _problemsService.GetFilteredByType(t)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Description,
+                    x.Type,
+                    AuthorEmail = x.Author.Email
+                })
+                .ToListAsync(),
+            _ => null,
+        };
+
+        var response = problems switch
+        {
+            { } p => p.Select(x => new ProblemResponse(
+                x.Id,
+                x.Title,
+                x.Description,
+                _problemsService
+                    .GetAllDescriptions()
+                    .First(y => y.Type == x.Type),
+                x.AuthorEmail
+            ))
+                .ToList(),
+            _ => null,
+        };
+
+        return response switch
+        {
+            { } => Ok(response),
+            _ => NotFound(),
+        };
     }
 
-    [HttpGet("{id:required}")]
-    public dynamic Get(string id)
+    [HttpGet("{id:guid:required}")]
+    public async Task<ActionResult<ProblemResponse>> Get(Guid id)
     {
-        return id;
+        var problem = await _problemsService.GetFilteredById(id)
+            .Select(x => new {
+                x.Id,
+                x.Title,
+                x.Description,
+                x.Type,
+                AuthorEmail = x.Author.Email
+            })
+            .FirstOrDefaultAsync();
+
+        var response = problem switch
+        {
+            { } p => new ProblemResponse(
+                p.Id,
+                p.Title,
+                p.Description,
+                _problemsService
+                    .GetAllDescriptions()
+                    .First(y => y.Type == p.Type),
+                p.AuthorEmail
+            ),
+            _ => null,
+        };
+
+        return response switch
+        {
+            { } x => Ok(x),
+            _ => NotFound(),
+        };
     }
 
-    [Authorize(Roles = "Administrator")]
-    [HttpPost]
-    public async Task<IActionResult> Create([FromForm] ProblemCreateRequest request)
+    [Authorize(Roles = "Moderator")]
+    [HttpPost("/{programmingLanguage:required}/{solutionType:required}/problems")]
+    [AttachProblemType]
+    public async Task<IActionResult> Create(string programmingLanguage, string solutionType, [FromForm] ProblemCreateRequest request)
     {
+        var solutionDir = _tempDir.CreateSubdirectory($"{DateTime.Now:s}");
+
+        var bytes = await Task.WhenAll(
+            request.Source.OpenReadStream().CollectAsByteArrayAsync(),
+            request.Input.OpenReadStream().CollectAsByteArrayAsync()
+        );
+        var (solution, input) = (bytes[0], bytes[1]);
+
+        var testableApp = _testableAppFactory.CreateFromDescription(programmingLanguage, solutionType);
+        var runResult = await testableApp.TestAsync(solutionDir, solution, input);
+
+        if (runResult is ErrorResult<Result<string, Exception>[], Exception> errorRunResult)
+        {
+            return BadRequest($"Something happened at execution. Error: {errorRunResult.None.Message}");
+        }
+
+        var successRunResult = runResult as SuccessResult<Result<string, Exception>[], Exception>;
+        var successResults = successRunResult!.Some
+            .OfType<SuccessResult<string, Exception>>()
+            .ToList();
+
+        if (successResults.Count != successRunResult.Some.Length)
+        {
+            return BadRequest("Solution is not working for all the tests");
+        }
+
         var dto = new ProblemCreateDto(
             User.GetId(),
             (ProblemType) HttpContext.Items["ProblemType"]!,
             request.Title,
             request.Description,
-            await request.Source.OpenReadStream().CollectAsByteArrayAsync()
+            input,
+            new ProblemCreateSolutionDto(
+                solution,
+                successResults.Select(x => x.Some).ToArray()
+            )
         );
 
         return await _problemsService.CreateAsync(dto) switch
@@ -55,10 +159,28 @@ public class ProblemsController : ControllerBase
         };
     }
 
-    [Authorize(Roles = "Administrator")]
-    [HttpDelete("{id:required}")]
-    public dynamic Delete(string id)
+    [Authorize(Roles = "Admin,Moderator")]
+    [HttpDelete("{id:guid:required}")]
+    public async Task<object> Delete(Guid id)
     {
-        return $"deleted: {DateTime.Now}";
+        var problem = await _problemsService.GetFilteredById(id).FirstOrDefaultAsync();
+        if (problem is null)
+        {
+            return NotFound();
+        }
+
+        if (problem.AuthorId != User.GetId() && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        var result = await _problemsService.DeleteAsync(problem);
+
+        return result switch
+        {
+            SuccessResult<bool, Exception> => Ok(),
+            ErrorResult<bool, Exception> errorResult => Problem(errorResult.None.Message),
+            _ => Problem(),
+        };
     }
 }

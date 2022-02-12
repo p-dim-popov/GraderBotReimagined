@@ -10,5 +10,9 @@ public class Solution
     public Guid ProblemId { get; set; }
     public Problem Problem { get; set; }
 
-    public byte[] Data { get; set; }
+    public byte[] Source { get; set; }
+
+    public SolutionResult SolutionResult { get; set; }
+
+    public bool IsAuthored { get; set; }
 }

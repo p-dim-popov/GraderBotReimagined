@@ -47,6 +47,6 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("is-admin")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Admin")]
     public IActionResult AdminCheck() => Ok();
 }

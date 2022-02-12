@@ -16,28 +16,6 @@ namespace Api;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddGradableAppProvider(this IServiceCollection services) =>
-        services
-            .AddHttpContextAccessor()
-            .AddScoped<IApp>(serviceProvider =>
-            {
-                var context = serviceProvider
-                    .GetRequiredService<IHttpContextAccessor>()
-                    .HttpContext;
-                var routeValues = context!.Request.RouteValues;
-
-                var language = routeValues["programmingLanguage"]?.ToString()?.ToLower();
-                var type = routeValues["problemType"]?.ToString()?.ToLower();
-                var processStarter = serviceProvider.GetService<IProcessStarter>()!;
-                var problemType = ProblemTypeResolver.Resolve(language, type);
-
-                return problemType switch
-                {
-                    ProblemType.JavaScriptSingleFile => new JavaScriptSingleFileConsoleApp(processStarter),
-                    _ => new NotSupportedApp {Language = language, Type = type},
-                };
-            });
-
     public static IServiceCollection AddAuth(this IServiceCollection services)
     {
         var jwtSection = services

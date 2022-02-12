@@ -3,20 +3,30 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Api.Helpers;
 
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class AttachProblemTypeAttribute: ActionFilterAttribute
 {
+    public bool Skip { get; set; }
+
     public override void OnActionExecuting(ActionExecutingContext context)
     {
-        var programmingLanguage = $"{context.RouteData.Values["programmingLanguage"]}".ToLower();
-        var problemType = $"{context.RouteData.Values["problemType"]}".ToLower();
-        if (ProblemTypeResolver.Resolve(programmingLanguage, problemType) is not { } type)
+        // TODO: probably set order and check the one with the highest?
+        var timesSkippedViaAttribute = context.ActionDescriptor.EndpointMetadata
+            .OfType<AttachProblemTypeAttribute>()
+            .Count(x => x.Skip);
+        if (timesSkippedViaAttribute == 0)
         {
-            context.Result = new BadRequestObjectResult(new { message = "Unknown language or problem type" });
-            return;
+            var programmingLanguage = $"{context.RouteData.Values["programmingLanguage"]}".ToLower();
+            var solutionType = $"{context.RouteData.Values["solutionType"]}".ToLower();
+            if (ProblemTypeResolver.Resolve(programmingLanguage, solutionType) is not { } type)
+            {
+                context.Result = new BadRequestObjectResult(new { message = "Unknown language or problem type" });
+                return;
+            }
+
+            context.HttpContext.Items["ProblemType"] = type;
         }
 
-        context.HttpContext.Items["ProblemType"] = type;
         base.OnActionExecuting(context);
     }
 }

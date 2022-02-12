@@ -17,5 +17,7 @@ public class Problem
     [Column(TypeName = "TEXT")]
     public string Description { get; set; }
 
-    public byte[] Data { get; set; }
+    public byte[] Input { get; set; }
+
+    public virtual ICollection<Solution> Solutions { get; set; }
 }

@@ -7,5 +7,11 @@ public record ProblemCreateDto(
     ProblemType Type,
     string Title,
     string Description,
-    byte[] Source
+    byte[] Input,
+    ProblemCreateSolutionDto Solution
+);
+
+public record ProblemCreateSolutionDto(
+    byte[] Source,
+    string[] Outputs
 );

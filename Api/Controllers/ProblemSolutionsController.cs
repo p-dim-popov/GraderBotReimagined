@@ -1,15 +1,15 @@
 using Api.Helpers.Authorization;
-using Api.Models;
 using Api.Models.Solutions;
 using Api.Services.Abstractions;
 using Core.Types;
 using Core.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Runners.Abstractions;
 
 namespace Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("solutions")]
 public class ProblemSolutionsController: ControllerBase
@@ -36,12 +36,81 @@ public class ProblemSolutionsController: ControllerBase
         _testableAppFactory = testableAppFactory;
     }
 
-    [HttpGet("{id}")]
-    public dynamic GetById(string id)
+    [HttpGet("{id:guid:required}")]
+    public async Task<object> GetById(Guid id)
     {
-        return $"solution: id: {id}";
+        var solution = await _solutionsService.GetFilteredById(id)
+            .Select(x => new
+            {
+                x.ProblemId,
+                ProblemTitle = x.Problem.Title,
+                Outputs = x.SolutionResult.ResultValues.Select(rv => rv.Value),
+                CorrectOutputs = x.Problem.Solutions
+                    .Where(s => s.IsAuthored)
+                    .Select(s => s.SolutionResult.ResultValues
+                        .Select(rv => rv.Value))
+                    .First()
+                    .ToList(),
+                x.IsAuthored,
+                x.AuthorId,
+                ProblemAuthorId = x.Problem.AuthorId,
+            })
+            .FirstOrDefaultAsync();
+
+        if (solution is null)
+        {
+            return NotFound();
+        }
+
+        if (solution.IsAuthored && solution.AuthorId != User.GetId())
+        {
+            return BadRequest(new { message = "Only the author can view that solution" });
+        }
+
+        var attempts = solution.Outputs
+            .Select((x, i) => x == solution.CorrectOutputs[i]
+                ? new SolutionAttempt(x)
+                : new SolutionAttempt(x, solution.CorrectOutputs[i]));
+        var result = new
+        {
+            solution.ProblemId,
+            solution.ProblemTitle,
+            solution.AuthorId,
+            solution.ProblemAuthorId,
+            attempts,
+        };
+
+        return result;
     }
 
+    [HttpGet("{id:guid:required}/download")]
+    public async Task<IActionResult> DownloadById(Guid id)
+    {
+        var solution = await _solutionsService.GetFilteredById(id)
+            .Select(x => new
+            {
+                x.Source,
+                ProblemTitle = $"{x.Problem.Title.Replace(" ", "_")}.{x.Id}",
+                x.IsAuthored,
+                x.AuthorId,
+                ProblemAuthorId = x.Problem.AuthorId,
+            })
+            .FirstOrDefaultAsync();
+
+        if (solution is null)
+        {
+            return NotFound();
+        }
+
+        if (solution.AuthorId != User.GetId() && solution.ProblemAuthorId != User.GetId() && !User.IsInRole("Admin"))
+        {
+            return BadRequest(new { message = "Only the solution author, problem author or an admin can download solutions" });
+        }
+
+        return File(solution.Source, "application/octet-stream", solution.ProblemTitle);
+    }
+
+    [AllowAnonymous]
     [HttpPost("/problems/{problemId:guid:required}/solutions")]
     public async Task<ActionResult> Submit(Guid problemId, [FromForm] SolutionRequest solution)
     {
@@ -74,9 +143,9 @@ public class ProblemSolutionsController: ControllerBase
         var results = successRunResult.Some
             .Select((x, i) => x switch
             {
-                SuccessResult<string, Exception> s => new SolutionCreateDto.Attempt(s.Some, s.Some != correctResults[i].Value ? correctResults[i].Value : null),
-                ErrorResult<string, Exception> e => new SolutionCreateDto.Attempt(e.None.Message, correctResults[i].Value),
-                _ => new SolutionCreateDto.Attempt("", correctResults[i].Value),
+                SuccessResult<string, Exception> s => new SolutionAttempt(s.Some, s.Some != correctResults[i].Value ? correctResults[i].Value : null),
+                ErrorResult<string, Exception> e => new SolutionAttempt(e.None.Message, correctResults[i].Value),
+                _ => new SolutionAttempt("", correctResults[i].Value),
             })
             .ToList();
 

@@ -6,6 +6,6 @@ public record ProblemResponse(
     Guid Id,
     string Title,
     string Description,
-    ProblemType Type,
+    ProblemTypeDescription Type,
     string AuthorEmail
 );

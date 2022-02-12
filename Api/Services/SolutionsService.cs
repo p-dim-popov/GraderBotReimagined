@@ -42,4 +42,6 @@ public class SolutionsService: ISolutionsService
 
         return new SuccessResult<bool, Exception>(true);
     }
+
+    public IQueryable<Solution> GetFilteredById(Guid id) => _context.Solutions.Where(x => x.Id == id);
 }

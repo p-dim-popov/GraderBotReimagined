@@ -34,25 +34,78 @@ public class ProblemsController : ControllerBase
     [HttpGet("/{programmingLanguage:required}/{solutionType:required}/problems")]
     [AttachProblemType]
     public async Task<ActionResult<List<ProblemResponse>>> List(string programmingLanguage, string solutionType)
-        => ProblemTypeResolver.Resolve(programmingLanguage, solutionType) switch
+    {
+        var type = ProblemTypeResolver.Resolve(programmingLanguage, solutionType);
+
+        var problems = type switch
         {
-            { } type => Ok(
-                await _problemsService.GetFilteredByType(type)
-                    .Select(x => new ProblemResponse(
-                        x.Id, x.Title, x.Description, x.Type, x.Author.Email
-                    ))
-                    .ToListAsync()
-            ),
-            _ => NotFound()
+            { } t => await _problemsService.GetFilteredByType(t)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Description,
+                    x.Type,
+                    AuthorEmail = x.Author.Email
+                })
+                .ToListAsync(),
+            _ => null,
         };
 
+        var response = problems switch
+        {
+            { } p => p.Select(x => new ProblemResponse(
+                x.Id,
+                x.Title,
+                x.Description,
+                _problemsService
+                    .GetAllDescriptions()
+                    .First(y => y.Type == x.Type),
+                x.AuthorEmail
+            ))
+                .ToList(),
+            _ => null,
+        };
+
+        return response switch
+        {
+            { } => Ok(response),
+            _ => NotFound(),
+        };
+    }
+
     [HttpGet("{id:guid:required}")]
-    public async Task<ProblemResponse?> Get(Guid id)
+    public async Task<ActionResult<ProblemResponse>> Get(Guid id)
     {
         var problem = await _problemsService.GetFilteredById(id)
-            .Select(x => new ProblemResponse(x.Id, x.Title, x.Description, x.Type, x.Author.Email))
+            .Select(x => new {
+                x.Id,
+                x.Title,
+                x.Description,
+                x.Type,
+                AuthorEmail = x.Author.Email
+            })
             .FirstOrDefaultAsync();
-        return problem;
+
+        var response = problem switch
+        {
+            { } p => new ProblemResponse(
+                p.Id,
+                p.Title,
+                p.Description,
+                _problemsService
+                    .GetAllDescriptions()
+                    .First(y => y.Type == p.Type),
+                p.AuthorEmail
+            ),
+            _ => null,
+        };
+
+        return response switch
+        {
+            { } x => Ok(x),
+            _ => NotFound(),
+        };
     }
 
     [Authorize(Roles = "Moderator")]

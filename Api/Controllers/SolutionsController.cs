@@ -1,3 +1,4 @@
+using Api.Helpers;
 using Api.Helpers.Authorization;
 using Api.Models.Solutions;
 using Api.Services.Abstractions;
@@ -12,7 +13,7 @@ namespace Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("solutions")]
-public class ProblemSolutionsController: ControllerBase
+public class SolutionsController: ControllerBase
 {
     private readonly DirectoryInfo _tempDir = Directory.CreateDirectory(
         Path.Join(
@@ -25,7 +26,7 @@ public class ProblemSolutionsController: ControllerBase
     private readonly ISolutionsService _solutionsService;
     private readonly ITestableAppFactory _testableAppFactory;
 
-    public ProblemSolutionsController(
+    public SolutionsController(
         IProblemsService problemsService,
         ISolutionsService solutionsService,
         ITestableAppFactory testableAppFactory
@@ -161,5 +162,57 @@ public class ProblemSolutionsController: ControllerBase
         }
 
         return Ok(results);
+    }
+
+    [HttpGet]
+    public async Task<object> List([FromQuery] SolutionsListItemRequest request)
+    {
+        var (problemTypeDescription, pagination) = request;
+
+        var query = _solutionsService.GetAll()
+            .Where(x => x.AuthorId == User.GetId());
+
+        if (problemTypeDescription is var (programmingLanguage, solutionType) && ProblemTypeResolver.Resolve(programmingLanguage, solutionType) is {} type)
+        {
+            query = query.Where(x => x.Problem.Type == type);
+        }
+
+        if (pagination is ({} page, {} pageSize))
+        {
+            query = query.Skip(page * pageSize).Take(pageSize);
+        }
+
+        var list = await query
+            .Select(x => new
+            {
+                x.Id,
+                x.ProblemId,
+                ProblemTitle = x.Problem.Title,
+                x.Problem.Type,
+                Outputs = x.SolutionResult.ResultValues.Select(rv => rv.Value),
+                CorrectOutputs = x.Problem.Solutions
+                    .Where(s => s.IsAuthored)
+                    .Select(s => s.SolutionResult.ResultValues
+                        .Select(rv => rv.Value))
+                    .First()
+                    .ToList(),
+            })
+            .ToListAsync();
+
+        var result = list
+            .Select(solution => new
+            {
+                solution.Id,
+                Type = _problemsService.GetAllDescriptions().First(x => x.Type == solution.Type),
+                solution.ProblemId,
+                solution.ProblemTitle,
+                Attemtps = solution.Outputs
+                    .Select((x, i) => x == solution.CorrectOutputs[i]
+                        ? new SolutionAttempt(x)
+                        : new SolutionAttempt(x, solution.CorrectOutputs[i])),
+            })
+            .ToList();
+
+        return list;
     }
 }

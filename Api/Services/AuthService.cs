@@ -31,10 +31,7 @@ public class AuthService : IAuthService
         if (user is null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             throw new BadHttpRequestException("Email or password is incorrect");
 
-        var response = new LoginResponse
-        {
-            Token = _jwtUtils.GenerateToken(user),
-        };
+        var response = new LoginResponse(_jwtUtils.GenerateToken(user));
         return response;
     }
 

@@ -9,4 +9,6 @@ public interface ISolutionsService
     Task<Result<bool, Exception>> SaveAsync(SolutionCreateDto solution);
 
     IQueryable<Solution> GetFilteredById(Guid id);
+
+    IQueryable<Solution> GetAll();
 }

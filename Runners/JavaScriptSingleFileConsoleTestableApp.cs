@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Core.Types;
 using Core.Utilities;
 using Helpers;
@@ -24,7 +25,7 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
     )
     {
         var jsonInput = Encoding.UTF8.GetString(inputBytes, 0, inputBytes.Length);
-        var inputs = JsonSerializer.Deserialize<string[][]>(jsonInput);
+        var inputs = JsonSerializer.Deserialize<JsonValue[][]>(jsonInput);
         if (inputs is null) return new ErrorResult<Result<string, Exception>[], Exception>(new Exception("Input not valid"));
 
         var results = await Task.WhenAll(inputs.Select((x, i) =>
@@ -36,7 +37,7 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
         return new SuccessResult<Result<string, Exception>[], Exception>(results);
     }
 
-    private async Task<Result<string, Exception>> RunAsync(DirectoryInfo workingDirectory, byte[] solution, string[] inputLines)
+    private async Task<Result<string, Exception>> RunAsync(DirectoryInfo workingDirectory, byte[] solution, JsonValue[] inputLines)
     {
         var mainJs = await CreateMainJsAsync(workingDirectory, solution, inputLines);
 
@@ -72,7 +73,7 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
         return new SuccessResult<bool, Exception>(true);
     }
 
-    private static async Task<string> CreateMainJsAsync(DirectoryInfo directory, byte[] solution, string[] args)
+    private static async Task<string> CreateMainJsAsync(DirectoryInfo directory, byte[] solution, JsonValue[] args)
     {
         var function = $"{Encoding.UTF8.GetString(solution, 0, solution.Length)}".Trim();
         var mainFnBody = $"({function})(JSON.parse(`{JsonSerializer.Serialize(args)}`))";

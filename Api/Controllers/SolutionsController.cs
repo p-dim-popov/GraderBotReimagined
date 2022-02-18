@@ -158,7 +158,7 @@ public class SolutionsController: ControllerBase
                 source,
                 results
             );
-            await _solutionsService.SaveAsync(dto);
+            await _solutionsService.CreateAsync(dto);
         }
 
         return Ok(results);
@@ -170,6 +170,7 @@ public class SolutionsController: ControllerBase
         var (problemTypeDescription, pagination) = request;
 
         var query = _solutionsService.GetAll()
+            .OrderByDescending(x => x.CreatedOn)
             .Where(x => x.AuthorId == User.GetId());
 
         if (problemTypeDescription is var (programmingLanguage, solutionType) && ProblemTypeResolver.Resolve(programmingLanguage, solutionType) is {} type)
@@ -189,6 +190,7 @@ public class SolutionsController: ControllerBase
                 x.ProblemId,
                 ProblemTitle = x.Problem.Title,
                 x.Problem.Type,
+                x.CreatedOn,
                 Outputs = x.SolutionResult.ResultValues.Select(rv => rv.Value),
                 CorrectOutputs = x.Problem.Solutions
                     .Where(s => s.IsAuthored)
@@ -206,6 +208,7 @@ public class SolutionsController: ControllerBase
                 Type = _problemsService.GetAllDescriptions().First(x => x.Type == solution.Type),
                 solution.ProblemId,
                 solution.ProblemTitle,
+                solution.CreatedOn,
                 Attemtps = solution.Outputs
                     .Select((x, i) => x == solution.CorrectOutputs[i]
                         ? new SolutionAttempt(x)
@@ -213,6 +216,6 @@ public class SolutionsController: ControllerBase
             })
             .ToList();
 
-        return list;
+        return result;
     }
 }

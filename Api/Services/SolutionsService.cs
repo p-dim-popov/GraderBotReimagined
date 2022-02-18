@@ -15,7 +15,7 @@ public class SolutionsService: ISolutionsService
         _context = context;
     }
 
-    public async Task<Result<bool, Exception>> SaveAsync(SolutionCreateDto solution)
+    public async Task<Result<bool, Exception>> CreateAsync(SolutionCreateDto solution)
     {
         var entity = new Solution
         {

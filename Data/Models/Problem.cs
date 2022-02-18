@@ -1,12 +1,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using Data.Models.Common;
 using Data.Models.Enums;
 
 namespace Data.Models;
 
-public class Problem
+public class Problem: BaseModel<Guid>
 {
-    public Guid Id { get; set; }
-
     public Guid AuthorId { get; set; }
     public User Author { get; set; }
 

@@ -26,6 +26,9 @@ namespace Data.LocalMigrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -33,6 +36,9 @@ namespace Data.LocalMigrations
                     b.Property<byte[]>("Input")
                         .IsRequired()
                         .HasColumnType("BLOB");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -54,8 +60,14 @@ namespace Data.LocalMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsSuccess")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("TEXT");
 
                     b.Property<uint>("SolutionResultId")
                         .HasColumnType("INTEGER");
@@ -77,6 +89,12 @@ namespace Data.LocalMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -95,8 +113,14 @@ namespace Data.LocalMigrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsAuthored")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("ProblemId")
                         .HasColumnType("TEXT");
@@ -120,6 +144,12 @@ namespace Data.LocalMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("SolutionId")
                         .HasColumnType("TEXT");
 
@@ -137,8 +167,14 @@ namespace Data.LocalMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Password")
@@ -155,6 +191,12 @@ namespace Data.LocalMigrations
                     b.Property<uint>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("TEXT");

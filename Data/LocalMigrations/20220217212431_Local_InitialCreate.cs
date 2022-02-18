@@ -14,7 +14,9 @@ namespace Data.LocalMigrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -27,7 +29,9 @@ namespace Data.LocalMigrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Email = table.Column<string>(type: "TEXT", nullable: false),
-                    Password = table.Column<string>(type: "TEXT", nullable: false)
+                    Password = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -43,7 +47,9 @@ namespace Data.LocalMigrations
                     Type = table.Column<int>(type: "INTEGER", nullable: false),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
-                    Input = table.Column<byte[]>(type: "BLOB", nullable: false)
+                    Input = table.Column<byte[]>(type: "BLOB", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -63,7 +69,9 @@ namespace Data.LocalMigrations
                     Id = table.Column<uint>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RoleId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    RoleId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -90,7 +98,9 @@ namespace Data.LocalMigrations
                     AuthorId = table.Column<Guid>(type: "TEXT", nullable: false),
                     ProblemId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Source = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    IsAuthored = table.Column<bool>(type: "INTEGER", nullable: false)
+                    IsAuthored = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -115,7 +125,9 @@ namespace Data.LocalMigrations
                 {
                     Id = table.Column<uint>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    SolutionId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    SolutionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -136,7 +148,9 @@ namespace Data.LocalMigrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Value = table.Column<string>(type: "TEXT", nullable: false),
                     IsSuccess = table.Column<bool>(type: "INTEGER", nullable: false),
-                    SolutionResultId = table.Column<uint>(type: "INTEGER", nullable: false)
+                    SolutionResultId = table.Column<uint>(type: "INTEGER", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

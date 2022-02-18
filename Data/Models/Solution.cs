@@ -1,9 +1,9 @@
+using Data.Models.Common;
+
 namespace Data.Models;
 
-public class Solution
+public class Solution: BaseModel<Guid>
 {
-    public Guid Id { get; set; }
-
     public Guid AuthorId { get; set; }
     public User Author { get; set; }
 

@@ -1,9 +1,9 @@
+using Data.Models.Common;
+
 namespace Data.Models;
 
-public class UserRole
+public class UserRole: BaseModel<uint>
 {
-    public uint Id { get; set; }
-
     public Guid UserId { get; set; }
     public User User { get; set; }
 

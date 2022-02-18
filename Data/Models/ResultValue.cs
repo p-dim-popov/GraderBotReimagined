@@ -1,9 +1,9 @@
+using Data.Models.Common;
+
 namespace Data.Models;
 
-public class ResultValue
+public class ResultValue: BaseModel<uint>
 {
-    public uint Id { get; set; }
-
     public string Value { get; set; }
 
     public bool IsSuccess { get; set; }

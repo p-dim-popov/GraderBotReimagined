@@ -1,11 +1,10 @@
 using System.Text.Json.Serialization;
+using Data.Models.Common;
 
 namespace Data.Models;
 
-public class User
+public class User: BaseModel<Guid>
 {
-    public Guid Id { get; set; }
-
     public string Email { get; set; }
 
     [JsonIgnore]

@@ -1,8 +1,10 @@
 using Api;
+using Api.Data.Seeding;
 using Api.Services;
 using Api.Services.Abstractions;
 using Data.DbContexts;
-using Data.Models;
+using Data.Seeding;
+using Data.Seeding.Abstractions;
 using Helpers;
 using Microsoft.OpenApi.Models;
 
@@ -61,41 +63,16 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetService<AppDbContext>()!;
 
-    var roles = context.Roles.ToList();
-    if (!roles.Any())
-    {
-        roles.Add(new Role {Name = "Admin"});
-        roles.Add(new Role {Name = "Moderator"});
-        context.Roles.AddRange(roles);
-    }
-    context.SaveChanges();
-
-    if (!context.Users.Any())
-    {
-        context.Users.AddRange(
-            new User
-            {
-                Email = "admin@local.host",
-                Password = BCrypt.Net.BCrypt.HashPassword("123"),
-                Roles = roles.Select(x => new UserRole { Role = x }).ToList(),
-            },
-            new User
-            {
-                Email = "moderator@local.host",
-                Password = BCrypt.Net.BCrypt.HashPassword("123"),
-                Roles = roles
-                    .Where(x => x.Name == "Moderator")
-                    .Select(x => new UserRole { Role = x })
-                    .ToList(),
-            },
-            new User
-            {
-                Email = "not-admin@local.host",
-                Password = BCrypt.Net.BCrypt.HashPassword("123"),
-            }
-        );
-    }
-    context.SaveChanges();
+    new AppDbSeeder(new ISeeder[]
+        {
+            new RolesSeeder(),
+            new UsersSeeder(),
+            new ProblemsSeeder(),
+            new SolutionsSeeder(),
+        })
+        .SeedAsync(context, scope.ServiceProvider)
+        .GetAwaiter()
+        .GetResult();
 }
 
 app.MapControllers();

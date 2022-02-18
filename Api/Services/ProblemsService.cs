@@ -59,8 +59,7 @@ public class ProblemsService: IProblemsService
     public async Task<ProblemTypeDescription> FetchMostRecentAsync(Guid userId)
     {
         var allSolutionsOrdered = _context.Solutions
-            // TODO: ffs implement IAuditInfo and creation date
-            .OrderBy(x => x.Id);
+            .OrderBy(x => x.CreatedOn);
 
         var problemType = (userId != Guid.Empty
                               ? await allSolutionsOrdered

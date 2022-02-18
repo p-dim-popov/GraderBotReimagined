@@ -1,9 +1,9 @@
+using Data.Models.Common;
+
 namespace Data.Models;
 
-public class SolutionResult
+public class SolutionResult: BaseModel<uint>
 {
-    public uint Id { get; set; }
-
     public ICollection<ResultValue> ResultValues { get; set; }
 
     public Guid SolutionId { get; set; }

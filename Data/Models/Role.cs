@@ -1,9 +1,9 @@
+using Data.Models.Common;
+
 namespace Data.Models;
 
-public class Role
+public class Role: BaseModel<Guid>
 {
-    public Guid Id { get; set; }
-
     public string Name { get; set; }
 
     public ICollection<UserRole> Users { get; set; }

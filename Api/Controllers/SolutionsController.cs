@@ -1,5 +1,6 @@
 using Api.Helpers;
 using Api.Helpers.Authorization;
+using Api.Models.Problem;
 using Api.Models.Solutions;
 using Api.Services.Abstractions;
 using Core.Types;
@@ -202,18 +203,21 @@ public class SolutionsController: ControllerBase
             .ToListAsync();
 
         var result = list
-            .Select(solution => new
-            {
+            .Select(solution => new SolutionListItemResponse(
                 solution.Id,
-                Type = _problemsService.GetAllDescriptions().First(x => x.Type == solution.Type),
+                _problemsService.GetAllDescriptions()
+                    .Where(x => x.Type == solution.Type)
+                    .Select(x => new HumanReadableTypeDescription(x.DisplayName, x.Description))
+                    .First(),
                 solution.ProblemId,
                 solution.ProblemTitle,
                 solution.CreatedOn,
-                Attemtps = solution.Outputs
+                solution.Outputs
                     .Select((x, i) => x == solution.CorrectOutputs[i]
                         ? new SolutionAttempt(x)
-                        : new SolutionAttempt(x, solution.CorrectOutputs[i])),
-            })
+                        : new SolutionAttempt(x, solution.CorrectOutputs[i]))
+                    .ToList()
+            ))
             .ToList();
 
         return result;

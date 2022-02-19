@@ -20,7 +20,7 @@ public class AttachProblemTypeAttribute: ActionFilterAttribute
             var solutionType = $"{context.RouteData.Values["solutionType"]}".ToLower();
             if (ProblemTypeResolver.Resolve(programmingLanguage, solutionType) is not { } type)
             {
-                context.Result = new BadRequestObjectResult(new { message = "Unknown language or problem type" });
+                context.Result = new BadRequestObjectResult(new { message = "Not supported language or problem type" });
                 return;
             }
 

@@ -1,10 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Data.Models.Enums;
 
 namespace Api.Models.Problem;
 
 public record ProblemTypeDescription(
-    string Language,
+    string ProgrammingLanguage,
     string SolutionType,
     [property: JsonIgnore]
     ProblemType Type,
@@ -22,3 +23,16 @@ public record ProblemTypeDescription(
         )
     };
 };
+
+public record BriefProblemTypeDescription(
+    [Required]
+    string ProgrammingLanguage,
+
+    [Required]
+    string SolutionType
+);
+
+public record HumanReadableTypeDescription(
+    string DisplayName,
+    string Description
+);

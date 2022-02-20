@@ -51,12 +51,12 @@ public class JavaScriptSingleFileConsoleAppUnitTests
     [TestCase(
         "console.log",
         @"[[""first string"",""some number next"",""123""]]",
-        "[ 'first string', 'some number next', '123' ]"
+        @"[ ""first string"", ""some number next"", ""123"" ]"
     )]
     [TestCase(
         "(input) => input.map(Number).filter(Boolean).filter(x => x % 2).forEach(console.log)",
         @"[[""2"",""3"",""X"",""1""]]",
-        "[ 3, 1 ]"
+        "3 0 [ 3, 1 ]\n1 1 [ 3, 1 ]"
     )]
     public async Task CallingFunctionWithoutErrors_ShouldWorkAsExpected(string function, string input, string expected)
     {
@@ -70,12 +70,12 @@ public class JavaScriptSingleFileConsoleAppUnitTests
         var successResult = runResult?.Some.FirstOrDefault() as SuccessResult<string, Exception>;
 
         Assert.IsNotNull(successResult);
-        StringAssert.Contains(expected, successResult?.Some);
+        Assert.AreEqual(expected, successResult?.Some);
     }
 
     [Test]
-    [TestCase(@"[[""trim me""]]", "[ 'trim me' ]")]
-    [TestCase(@"[["" do not trim me ""]]", "[ ' do not trim me ' ]")]
+    [TestCase(@"[[""trim me""]]", @"[ ""trim me"" ]")]
+    [TestCase(@"[["" do not trim me ""]]", @"[ "" do not trim me "" ]")]
     public async Task Result_ShouldBeTrimmed(string input, string expected)
     {
         var runResult = await _testableApp.TestAsync(

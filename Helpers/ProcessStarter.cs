@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Diagnostics;
 using Core.Types;
 using Core.Utilities;
@@ -6,7 +7,7 @@ namespace Helpers;
 
 public class ProcessStarter: IProcessStarter
 {
-    public Result<Process, bool> Start(string program, params string[]? args)
+    public Result<Process, bool> Start(string program, IEnumerable<string>? args, Dictionary<string, string>? environmentVariables)
     {
         var process = new Process
         {
@@ -22,6 +23,13 @@ public class ProcessStarter: IProcessStarter
             },
             EnableRaisingEvents = true,
         };
+        if (environmentVariables is {} envVars)
+        {
+            foreach (var (key, value) in envVars)
+            {
+                process.StartInfo.EnvironmentVariables[key] = value;
+            }
+        }
 
         var isStartSuccess = process.Start();
         return isStartSuccess

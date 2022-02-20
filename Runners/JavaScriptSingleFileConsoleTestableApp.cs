@@ -41,7 +41,11 @@ public class JavaScriptSingleFileConsoleTestableApp : ITestableApp
     {
         var mainJs = await CreateMainJsAsync(workingDirectory, solution, inputLines);
 
-        var process = (_processStarter.Start("node", mainJs) as SuccessResult<Process, bool>)!.Some;
+        var process = (_processStarter.Start(
+            "deno",
+            new []{$"run --quiet {mainJs}"},
+            new Dictionary<string, string>{ {"NO_COLOR", bool.TrueString}}
+        ) as SuccessResult<Process, bool>)!.Some;
 
         if (await WaitForSuccessfulExitAsync(process) is ErrorResult<bool, Exception> result)
             return new ErrorResult<string, Exception>(result.None);

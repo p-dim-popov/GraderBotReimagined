@@ -1,6 +1,7 @@
 using Api.Models.Problem;
 using Api.Services.Abstractions;
 using Core.Types;
+using Core.Utilities;
 using Data.DbContexts;
 using Data.Models;
 using Data.Models.Enums;
@@ -42,16 +43,18 @@ public class ProblemsService: IProblemsService
             }
         };
 
-        try
+        var executeResult = await Ops.RunCatchingAsync(async () =>
         {
             await _context.Problems.AddAsync(entity);
             await _context.SaveChangesAsync();
-            return new Some<bool, Exception>(true);
-        }
-        catch (Exception e)
+        });
+
+        if (executeResult is None<bool, Exception> { Error: {} exception })
         {
-            return new None<bool, Exception>(e);
+            return new None<bool, Exception>(exception);
         }
+
+        return new Some<bool, Exception>(true);
     }
 
     public IEnumerable<ProblemTypeDescription> GetAllDescriptions() => ProblemTypeDescription.List;
@@ -88,15 +91,17 @@ public class ProblemsService: IProblemsService
 
     public async Task<Result<bool, Exception>> DeleteAsync(Problem problem)
     {
-        try
+        var executeResult = await Ops.RunCatchingAsync(async () =>
         {
             _context.Problems.Remove(problem);
             await _context.SaveChangesAsync();
-            return new Some<bool, Exception>(true);
-        }
-        catch (Exception e)
+        });
+
+        if (executeResult is None<bool, Exception> { Error: {} exception })
         {
-            return new None<bool, Exception>(e);
+            return new None<bool, Exception>(exception);
         }
+
+        return new Some<bool, Exception>(true);
     }
 }

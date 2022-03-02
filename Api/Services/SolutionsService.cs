@@ -1,6 +1,7 @@
 using Api.Models.Solutions;
 using Api.Services.Abstractions;
 using Core.Types;
+using Core.Utilities;
 using Data.DbContexts;
 using Data.Models;
 
@@ -30,14 +31,15 @@ public class SolutionsService: ISolutionsService
             }
         };
 
-        try
+        var executeResult = await Ops.RunCatchingAsync(async () =>
         {
             await _context.Solutions.AddAsync(entity);
             await _context.SaveChangesAsync();
-        }
-        catch (Exception e)
+        });
+
+        if (executeResult is None<bool, Exception> { Error: {} exception })
         {
-            return new None<bool, Exception>(e);
+            return new None<bool, Exception>(exception);
         }
 
         return new Some<bool, Exception>(true);

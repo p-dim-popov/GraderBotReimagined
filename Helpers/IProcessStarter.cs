@@ -6,5 +6,5 @@ namespace Helpers;
 
 public interface IProcessStarter
 {
-    Result<Process, bool> Start(string program, IEnumerable<string>? args = null, Dictionary<string, string>? environmentVariables = null);
+    Result<Process, object> Start(string program, IEnumerable<string>? args = null, Dictionary<string, string>? environmentVariables = null);
 }

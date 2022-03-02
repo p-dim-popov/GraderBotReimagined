@@ -1,4 +1,3 @@
-using System.Collections.Specialized;
 using System.Diagnostics;
 using Core.Types;
 using Core.Utilities;
@@ -7,7 +6,7 @@ namespace Helpers;
 
 public class ProcessStarter: IProcessStarter
 {
-    public Result<Process, bool> Start(string program, IEnumerable<string>? args, Dictionary<string, string>? environmentVariables)
+    public Result<Process, object> Start(string program, IEnumerable<string>? args, Dictionary<string, string>? environmentVariables)
     {
         var process = new Process
         {
@@ -31,9 +30,13 @@ public class ProcessStarter: IProcessStarter
             }
         }
 
-        var isStartSuccess = process.Start();
-        return isStartSuccess
-            ? new SuccessResult<Process, bool>(process)
-            : new ErrorResult<Process, bool>(false);
+        var startResult = Ops.RunCatching(process.Start);
+
+        if (startResult is ErrorResult<bool, Exception> errorStartResult)
+        {
+            return new ErrorResult<Process, object>(errorStartResult.None);
+        }
+
+        return new SuccessResult<Process, object>(process);
     }
 }

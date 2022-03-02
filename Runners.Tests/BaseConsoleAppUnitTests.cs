@@ -18,9 +18,9 @@ public abstract class BaseConsoleAppUnitTests: BaseUnitTests
     {
         var runResult = await TestAsync(function, @"[[""123""], [""hello""], [""darkness...""]]");
 
-        var errorResults = runResult.OfType<ErrorResult<string, Exception>>().ToList();
+        var errorResults = runResult.OfType<None<string, Exception>>().ToList();
         Assert.Greater(errorResults.Count, 1, runResult.ToReadableJson());
-        errorResults.ForEach(errorResult => StringAssert.Contains(expected, errorResult.None.Message, runResult.ToReadableJson()));
+        errorResults.ForEach(errorResult => StringAssert.Contains(expected, errorResult.Error.Message, runResult.ToReadableJson()));
     }
 
     [Test]
@@ -28,9 +28,9 @@ public abstract class BaseConsoleAppUnitTests: BaseUnitTests
     {
         var runResult = await TestAsync(function, input);
 
-        var successResult = runResult.First() as SuccessResult<string, Exception>;
+        var successResult = runResult.First() as Some<string, Exception>;
         Assert.NotNull(successResult, runResult.ToReadableJson());
-        Assert.AreEqual(expected, successResult?.Some, runResult.ToReadableJson());
+        Assert.AreEqual(expected, successResult?.Result, runResult.ToReadableJson());
     }
 
     private async Task<Result<string, Exception>[]> TestAsync(string function, string input)
@@ -39,10 +39,10 @@ public abstract class BaseConsoleAppUnitTests: BaseUnitTests
             _solutionDir,
             Encoding.UTF8.GetBytes(function),
             Encoding.UTF8.GetBytes(input)
-        ) as SuccessResult<Result<string, Exception>[], Exception>;
+        ) as Some<Result<string, Exception>[], Exception>;
 
         Assert.IsNotNull(runResult);
-        return runResult!.Some;
+        return runResult!.Result;
     }
 
     [Test]
@@ -52,9 +52,9 @@ public abstract class BaseConsoleAppUnitTests: BaseUnitTests
     {
         var runResult = await TestAsync(LogFirstLineFromInputSolution, input);
 
-        var successResult = runResult.First() as SuccessResult<string, Exception>;
+        var successResult = runResult.First() as Some<string, Exception>;
         Assert.IsNotNull(successResult, runResult.ToReadableJson());
-        Assert.AreEqual(expected, successResult?.Some, runResult.ToReadableJson());
+        Assert.AreEqual(expected, successResult?.Result, runResult.ToReadableJson());
     }
 
     protected abstract string LogFirstLineFromInputSolution { get; }

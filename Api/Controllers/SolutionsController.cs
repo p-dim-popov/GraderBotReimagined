@@ -134,19 +134,19 @@ public class SolutionsController: ControllerBase
         var testableApp = _testableAppFactory.CreateFromType(problem.Type);
         var runResult = await testableApp.TestAsync(directory, source, problem.Input);
 
-        if (runResult is ErrorResult<Result<string, Exception>[], Exception> errorRunResult)
+        if (runResult is None<Result<string, Exception>[], Exception> errorRunResult)
         {
-            return Problem($"Something happened at execution. Error: {errorRunResult.None.Message}");
+            return Problem($"Something happened at execution. Error: {errorRunResult.Error.Message}");
         }
 
-        var successRunResult = runResult as SuccessResult<Result<string, Exception>[], Exception>;
+        var successRunResult = runResult as Some<Result<string, Exception>[], Exception>;
 
         var correctResults = problem.Solutions.First().SolutionResult.ResultValues.ToArray();
-        var results = successRunResult.Some
+        var results = successRunResult.Result
             .Select((x, i) => x switch
             {
-                SuccessResult<string, Exception> s => new SolutionAttempt(s.Some, s.Some != correctResults[i].Value ? correctResults[i].Value : null),
-                ErrorResult<string, Exception> e => new SolutionAttempt(e.None.Message, correctResults[i].Value),
+                Some<string, Exception> s => new SolutionAttempt(s.Result, s.Result != correctResults[i].Value ? correctResults[i].Value : null),
+                None<string, Exception> e => new SolutionAttempt(e.Error.Message, correctResults[i].Value),
                 _ => new SolutionAttempt("", correctResults[i].Value),
             })
             .ToList();

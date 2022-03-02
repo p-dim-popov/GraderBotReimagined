@@ -26,19 +26,19 @@ public static class ProcessExtensions
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(waitTimeMs));
         var result = await Ops.RunCatchingAsync(() => process.WaitForExitAsync(cts.Token));
-        if (result is ErrorResult<bool, Exception> errorResult)
+        if (result is None<bool, Exception> errorResult)
         {
             var error = await process.CollectErrorOutput();
-            return new ErrorResult<bool, Exception>(new Exception(error, errorResult.None));
+            return new None<bool, Exception>(new Exception(error, errorResult.Error));
         }
 
         if (process.ExitCode != 0)
         {
             var error = await process.CollectErrorOutput();
-            return new ErrorResult<bool, Exception>(new Exception(error));
+            return new None<bool, Exception>(new Exception(error));
         }
 
-        return new SuccessResult<bool, Exception>(true);
+        return new Some<bool, Exception>(true);
     }
 
     public static async Task<string> CollectErrorOutput(this Process process)

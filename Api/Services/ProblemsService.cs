@@ -46,11 +46,11 @@ public class ProblemsService: IProblemsService
         {
             await _context.Problems.AddAsync(entity);
             await _context.SaveChangesAsync();
-            return new SuccessResult<bool, Exception>(true);
+            return new Some<bool, Exception>(true);
         }
         catch (Exception e)
         {
-            return new ErrorResult<bool, Exception>(e);
+            return new None<bool, Exception>(e);
         }
     }
 
@@ -92,11 +92,11 @@ public class ProblemsService: IProblemsService
         {
             _context.Problems.Remove(problem);
             await _context.SaveChangesAsync();
-            return new SuccessResult<bool, Exception>(true);
+            return new Some<bool, Exception>(true);
         }
         catch (Exception e)
         {
-            return new ErrorResult<bool, Exception>(e);
+            return new None<bool, Exception>(e);
         }
     }
 }

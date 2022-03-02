@@ -32,11 +32,11 @@ public class ProcessStarter: IProcessStarter
 
         var startResult = Ops.RunCatching(process.Start);
 
-        if (startResult is ErrorResult<bool, Exception> errorStartResult)
+        if (startResult is None<bool, Exception> errorStartResult)
         {
-            return new ErrorResult<Process, object>(errorStartResult.None);
+            return new None<Process, object>(errorStartResult.Error);
         }
 
-        return new SuccessResult<Process, object>(process);
+        return new Some<Process, object>(process);
     }
 }

@@ -24,14 +24,14 @@ public class JavaScriptSingleFileConsoleTestableApp : BaseConsoleTestableApp
             "deno",
             new []{$"run --quiet {mainJs}"},
             new Dictionary<string, string>{ {"NO_COLOR", bool.TrueString}}
-        ) as SuccessResult<Process, object>)!.Some;
+        ) as Some<Process, object>)!.Result;
 
-        if (await process.WaitForSuccessfulExitAsync() is ErrorResult<bool, Exception> result)
-            return new ErrorResult<string, Exception>(result.None);
+        if (await process.WaitForSuccessfulExitAsync() is None<bool, Exception> result)
+            return new None<string, Exception>(result.Error);
 
         var output = $"{await process.StandardOutput.ReadToEndAsync()}".TrimEnd();
         File.Delete(mainJs);
-        return new SuccessResult<string, Exception>(output);
+        return new Some<string, Exception>(output);
     }
 
     private static async Task<string> CreateMainJsAsync(DirectoryInfo directory, byte[] solution, JsonValue[] args)

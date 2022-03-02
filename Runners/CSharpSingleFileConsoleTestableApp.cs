@@ -35,24 +35,24 @@ public class CSharpSingleFileConsoleTestableApp: BaseConsoleTestableApp
         _prepareTask ??= PrepareAsync(workingDirectory, solution);
         var binaryPathResult = await _prepareTask;
 
-        if (binaryPathResult is ErrorResult<string, Exception> errorResult) return new ErrorResult<string, Exception>(errorResult.None);
-        var binaryPath = (binaryPathResult as SuccessResult<string, Exception>)!.Some;
+        if (binaryPathResult is None<string, Exception> errorResult) return new None<string, Exception>(errorResult.Error);
+        var binaryPath = (binaryPathResult as Some<string, Exception>)!.Result;
 
         var process = (_processStarter.Start(
             "firejail",
             new []{"--quiet", "--net=none", binaryPath}
-        ) as SuccessResult<Process, object>)!.Some;
+        ) as Some<Process, object>)!.Result;
 
         foreach (var inputLine in inputLines)
         {
             await process.StandardInput.WriteLineAsync(inputLine.ToString());
         }
 
-        if (await process.WaitForSuccessfulExitAsync(512) is ErrorResult<bool, Exception> result)
-            return new ErrorResult<string, Exception>(result.None);
+        if (await process.WaitForSuccessfulExitAsync(512) is None<bool, Exception> result)
+            return new None<string, Exception>(result.Error);
 
         var output = $"{await process.StandardOutput.ReadToEndAsync()}".TrimEnd();
-        return new SuccessResult<string, Exception>(output);
+        return new Some<string, Exception>(output);
     }
 
     protected override DirectoryInfo GetWorkingDirectoryPerInput(DirectoryInfo baseWorkDir, int index) => baseWorkDir;
@@ -84,14 +84,14 @@ public class CSharpSingleFileConsoleTestableApp: BaseConsoleTestableApp
                 SelfContained ? "--sc" : "",
                 workingDirectory.FullName
             }
-        ) as SuccessResult<Process, object>)!.Some;
+        ) as Some<Process, object>)!.Result;
 
-        if (await process.WaitForSuccessfulExitAsync(5_000) is ErrorResult<bool, Exception> result)
-            return new ErrorResult<string, Exception>(result.None);
+        if (await process.WaitForSuccessfulExitAsync(5_000) is None<bool, Exception> result)
+            return new None<string, Exception>(result.Error);
 
         var binaryPath = Path.Join(
             workingDirectory.FullName, "bin", "Debug", TargetFramework, SelfContained ? RuntimeIdentifier : "", ProjectName
         );
-        return new SuccessResult<string, Exception>(binaryPath);
+        return new Some<string, Exception>(binaryPath);
     }
 }

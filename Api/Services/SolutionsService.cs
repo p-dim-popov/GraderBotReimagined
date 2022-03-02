@@ -37,10 +37,10 @@ public class SolutionsService: ISolutionsService
         }
         catch (Exception e)
         {
-            return new ErrorResult<bool, Exception>(e);
+            return new None<bool, Exception>(e);
         }
 
-        return new SuccessResult<bool, Exception>(true);
+        return new Some<bool, Exception>(true);
     }
 
     public IQueryable<Solution> GetFilteredById(Guid id) => _context.Solutions.Where(x => x.Id == id);

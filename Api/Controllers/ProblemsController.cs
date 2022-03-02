@@ -124,17 +124,17 @@ public class ProblemsController : ControllerBase
         var testableApp = _testableAppFactory.CreateFromDescription(programmingLanguage, solutionType);
         var runResult = await testableApp.TestAsync(solutionDir, solution, input);
 
-        if (runResult is ErrorResult<Result<string, Exception>[], Exception> errorRunResult)
+        if (runResult is None<Result<string, Exception>[], Exception> errorRunResult)
         {
-            return BadRequest($"Something happened at execution. Error: {errorRunResult.None.Message}");
+            return BadRequest($"Something happened at execution. Error: {errorRunResult.Error.Message}");
         }
 
-        var successRunResult = runResult as SuccessResult<Result<string, Exception>[], Exception>;
-        var successResults = successRunResult!.Some
-            .OfType<SuccessResult<string, Exception>>()
+        var successRunResult = runResult as Some<Result<string, Exception>[], Exception>;
+        var successResults = successRunResult!.Result
+            .OfType<Some<string, Exception>>()
             .ToList();
 
-        if (successResults.Count != successRunResult.Some.Length)
+        if (successResults.Count != successRunResult.Result.Length)
         {
             return BadRequest("Solution is not working for all the tests");
         }
@@ -147,14 +147,14 @@ public class ProblemsController : ControllerBase
             input,
             new ProblemCreateSolutionDto(
                 solution,
-                successResults.Select(x => x.Some).ToArray()
+                successResults.Select(x => x.Result).ToArray()
             )
         );
 
         return await _problemsService.CreateAsync(dto) switch
         {
-            SuccessResult<bool, Exception> => Ok(),
-            ErrorResult<bool, Exception> { None: { } e } => Problem(e.Message),
+            Some<bool, Exception> => Ok(),
+            None<bool, Exception> { Error: { } e } => Problem(e.Message),
             _ => Problem(),
         };
     }
@@ -178,8 +178,8 @@ public class ProblemsController : ControllerBase
 
         return result switch
         {
-            SuccessResult<bool, Exception> => Ok(),
-            ErrorResult<bool, Exception> errorResult => Problem(errorResult.None.Message),
+            Some<bool, Exception> => Ok(),
+            None<bool, Exception> errorResult => Problem(errorResult.Error.Message),
             _ => Problem(),
         };
     }

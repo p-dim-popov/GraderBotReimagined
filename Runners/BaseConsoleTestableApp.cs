@@ -20,11 +20,11 @@ public abstract class BaseConsoleTestableApp: ITestableApp
     public async Task<Result<Result<string, Exception>[], Exception>> TestAsync(DirectoryInfo workDir, byte[] solution, byte[] inputBytes)
     {
         var inputs = GetInputs(inputBytes);
-        if (inputs is null) return new ErrorResult<Result<string, Exception>[], Exception>(new Exception("Input not valid"));
+        if (inputs is null) return new None<Result<string, Exception>[], Exception>(new Exception("Input not valid"));
 
         var results = await Task.WhenAll(inputs.Select((inputLines, i) => RunAsync(GetWorkingDirectoryPerInput(workDir, i), solution, inputLines)));
 
-        return new SuccessResult<Result<string, Exception>[], Exception>(results);
+        return new Some<Result<string, Exception>[], Exception>(results);
     }
 
     protected virtual DirectoryInfo GetWorkingDirectoryPerInput(DirectoryInfo baseWorkDir, int index) => baseWorkDir.CreateSubdirectory(index.ToString());

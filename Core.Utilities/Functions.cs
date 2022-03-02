@@ -17,11 +17,11 @@ public static class Ops
     {
         try
         {
-            return new SuccessResult<TResult, Exception>(await func());
+            return new Some<TResult, Exception>(await func());
         }
         catch (Exception e)
         {
-            return new ErrorResult<TResult, Exception>(e);
+            return new None<TResult, Exception>(e);
         }
     }
 
@@ -30,11 +30,11 @@ public static class Ops
         try
         {
             await func();
-            return new SuccessResult<bool, Exception>(true);
+            return new Some<bool, Exception>(true);
         }
         catch (Exception e)
         {
-            return new ErrorResult<bool, Exception>(e);
+            return new None<bool, Exception>(e);
         }
     }
 
@@ -43,11 +43,11 @@ public static class Ops
         try
         {
             func();
-            return new SuccessResult<bool, Exception>(true);
+            return new Some<bool, Exception>(true);
         }
         catch (Exception e)
         {
-            return new ErrorResult<bool, Exception>(e);
+            return new None<bool, Exception>(e);
         }
     }
 
@@ -55,11 +55,11 @@ public static class Ops
     {
         try
         {
-            return new SuccessResult<TResult, Exception>(func());
+            return new Some<TResult, Exception>(func());
         }
         catch (Exception e)
         {
-            return new ErrorResult<TResult, Exception>(e);
+            return new None<TResult, Exception>(e);
         }
     }
 }

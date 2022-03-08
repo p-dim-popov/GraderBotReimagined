@@ -20,7 +20,7 @@ public class SolutionsController: ControllerBase
         Path.Join(
             Path.GetTempPath(),
             "problem-tests",
-            $"{DateTime.Now:yyyy-MM-dd}--{Guid.NewGuid()}"
+            $"{DateTime.Now:yyyy_MM_dd-hh_mm_ss_fff}--{Guid.NewGuid()}"
         ));
 
     private readonly IProblemsService _problemsService;
@@ -130,7 +130,7 @@ public class SolutionsController: ControllerBase
         }
 
         var source = await solution.Source.OpenReadStream().CollectAsByteArrayAsync();
-        var directory = _tempDir.CreateSubdirectory($"{DateTime.Now:s}");
+        var directory = _tempDir.CreateSubdirectory($"{DateTime.Now:yyyy_MM_dd-hh_mm_ss_fff}");
         var testableApp = _testableAppFactory.CreateFromType(problem.Type);
         var runResult = await testableApp.TestAsync(directory, source, problem.Input);
 

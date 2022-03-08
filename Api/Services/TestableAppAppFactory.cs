@@ -21,6 +21,7 @@ public class TestableAppFactory: ITestableAppFactory
         return problemType switch
         {
             ProblemType.JavaScriptSingleFileConsoleApp => new JavaScriptSingleFileConsoleTestableApp(_processStarter),
+            ProblemType.CSharpSingleFileConsoleApp => new CSharpSingleFileConsoleTestableApp(_processStarter),
             _ => new NotSupportedTestableApp(),
         };
     }

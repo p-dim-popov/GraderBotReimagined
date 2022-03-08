@@ -14,6 +14,12 @@ public static class ProblemTypeResolver
                 _ => null,
             },
 
+            "csharp" => type switch
+            {
+                "single-file-console-app" => ProblemType.CSharpSingleFileConsoleApp,
+                _ => null,
+            },
+
             _ => null,
         };
     }

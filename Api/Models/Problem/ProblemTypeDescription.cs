@@ -20,7 +20,14 @@ public record ProblemTypeDescription(
             ProblemType.JavaScriptSingleFileConsoleApp,
             "JavaScript Single File Console App",
             "Console app written in one file"
-        )
+        ),
+        new(
+            "csharp",
+            "single-file-console-app",
+            ProblemType.CSharpSingleFileConsoleApp,
+            "C# Single File Console App",
+            "Console app written in one file"
+        ),
     };
 };
 

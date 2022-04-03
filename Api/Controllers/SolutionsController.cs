@@ -151,7 +151,7 @@ public class SolutionsController: ControllerBase
             })
             .ToList();
 
-        var id = shouldSave
+        Guid? id = shouldSave
             ? await _solutionsService.CreateAsync(new SolutionCreateDto(
                     problemId,
                     User.GetId(),
@@ -160,9 +160,9 @@ public class SolutionsController: ControllerBase
                 )) switch
                 {
                     Some<Guid, Exception> { Result: { } resultId } => resultId,
-                    _ => Guid.Empty,
+                    _ => null,
                 }
-            : Guid.Empty;
+            : null;
 
         return Ok(new { id, attempts = results, });
     }

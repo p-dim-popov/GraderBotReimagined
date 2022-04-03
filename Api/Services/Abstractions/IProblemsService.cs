@@ -7,7 +7,9 @@ namespace Api.Services.Abstractions;
 
 public interface IProblemsService
 {
-    Task<Result<bool, Exception>> CreateAsync(ProblemCreateDto problem);
+    Task<Result<Problem, Exception>> CreateAsync(ProblemCreateDto problem);
+
+    Task<Result<Problem, Exception>> EditAsync(ProblemEditDto problem, bool isAdmin);
 
     IEnumerable<ProblemTypeDescription> GetAllDescriptions();
 

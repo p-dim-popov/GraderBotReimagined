@@ -4,6 +4,7 @@ using Api.Models.Problem;
 using Api.Services.Abstractions;
 using Core.Types;
 using Core.Utilities;
+using Data.Models;
 using Data.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -113,50 +114,129 @@ public class ProblemsController : ControllerBase
     [AttachProblemType]
     public async Task<IActionResult> Create(string programmingLanguage, string solutionType, [FromForm] ProblemCreateRequest request)
     {
-        var solutionDir = _tempDir.CreateSubdirectory($"{DateTime.Now:s}");
-
-        var bytes = await Task.WhenAll(
-            request.Source.OpenReadStream().CollectAsByteArrayAsync(),
-            request.Input.OpenReadStream().CollectAsByteArrayAsync()
-        );
-        var (solution, input) = (bytes[0], bytes[1]);
-
-        var testableApp = _testableAppFactory.CreateFromDescription(programmingLanguage, solutionType);
-        var runResult = await testableApp.TestAsync(solutionDir, solution, input);
-
-        if (runResult is None<Result<string, Exception>[], Exception> errorRunResult)
-        {
-            return BadRequest($"Something happened at execution. Error: {errorRunResult.Error.Message}");
-        }
-
-        var successRunResult = runResult as Some<Result<string, Exception>[], Exception>;
-        var successResults = successRunResult!.Result
-            .OfType<Some<string, Exception>>()
-            .ToList();
-
-        if (successResults.Count != successRunResult.Result.Length)
-        {
-            return BadRequest("Solution is not working for all the tests");
-        }
-
-        var dto = new ProblemCreateDto(
-            User.GetId(),
-            (ProblemType) HttpContext.Items["ProblemType"]!,
-            request.Title,
-            request.Description,
-            input,
-            new ProblemCreateSolutionDto(
-                solution,
-                successResults.Select(x => x.Result).ToArray()
-            )
+        var dtoResult = await TryCreateDto(
+            programmingLanguage, solutionType,
+            request.Title, request.Description,
+            (request.Input.OpenReadStream().CollectAsByteArrayAsync(), request.Source.OpenReadStream().CollectAsByteArrayAsync())
         );
 
-        return await _problemsService.CreateAsync(dto) switch
+        if (dtoResult is None<ProblemEditDto, IActionResult> { Error: { } error }) return error;
+        if (dtoResult is not Some<ProblemEditDto, IActionResult> { Result: {} dto}) return BadRequest(new { message = "Something went wrong" });
+        var createDto = new ProblemCreateDto(
+            dto.AuthorId,
+            dto.Type,
+            dto.Title, dto.Description,
+            dto.Input!, dto.Solution!
+        );
+
+        return await _problemsService.CreateAsync(createDto) switch
         {
-            Some<bool, Exception> => Ok(),
-            None<bool, Exception> { Error: { } e } => Problem(e.Message),
+            Some<Problem, Exception> { Result: { } entity } => Ok(new
+            {
+                entity.Id,
+            }),
+            None<Problem, Exception> { Error: { } e } => Problem(e.Message),
             _ => Problem(),
         };
+    }
+
+    [Authorize(Roles = "Moderator")]
+    [HttpPatch("/{programmingLanguage:required}/{solutionType:required}/problems")]
+    [AttachProblemType]
+    public async Task<IActionResult> Edit(string programmingLanguage, string solutionType, [FromForm] ProblemEditRequest request)
+    {
+        var originalQuery = _problemsService.GetFilteredById(request.Id);
+        bool hasChangedSource = request.Source is not null, hasChangedInput = request.Input is not null;
+        var shouldTest = hasChangedInput || hasChangedSource;
+
+        if (hasChangedInput && !hasChangedSource)
+        {
+            originalQuery = originalQuery
+                .Include(problem => problem.Solutions.Where(y => y.IsAuthored));
+        }
+
+        var original = await originalQuery.FirstAsync();
+        var dtoResult = await TryCreateDto(
+            programmingLanguage, solutionType,
+            request.Title, request.Description,
+            shouldTest ?
+            (
+                hasChangedInput
+                    ? request.Input!.OpenReadStream().CollectAsByteArrayAsync()
+                    : Task.FromResult(original.Input),
+                hasChangedSource
+                    ? request.Source!.OpenReadStream().CollectAsByteArrayAsync()
+                    : Task.FromResult(original.Solutions.First().Source)
+            ) : null
+        );
+        if (dtoResult is None<ProblemEditDto, IActionResult> { Error: { } error }) return error;
+        if (dtoResult is not Some<ProblemEditDto, IActionResult> { Result: {} dto}) return BadRequest(new { message = "Something went wrong" });
+
+        var editDto = new ProblemEditDto(
+            request.Id, dto.AuthorId,
+            dto.Type,
+            dto.Title, dto.Description,
+            dto.Input, dto.Solution
+        );
+        return await _problemsService.EditAsync(editDto, User.IsInRole("Admin")) switch
+        {
+            Some<Problem, Exception> => Ok(new { request.Id }),
+            None<Problem, Exception> { Error: { } e } => Problem(e.Message),
+            _ => Problem(),
+        };
+    }
+
+    private async Task<Result<ProblemEditDto, IActionResult>> TryCreateDto(
+        string programmingLanguage, string solutionType,
+        string title, string description,
+        (Task<byte[]> input, Task<byte[]> source)? codeTasks
+    )
+    {
+        byte[]? input = null;
+        ProblemCreateSolutionDto? solution = null;
+        if (codeTasks is { input: { } inputBytesTask, source: {} sourceBytesTask })
+        {
+            var bytes = await Task.WhenAll(sourceBytesTask, inputBytesTask);
+            var solutionBytes = bytes[0];
+            input = bytes[1];
+
+            var solutionDir = _tempDir.CreateSubdirectory($"{DateTime.Now:s}");
+
+            var testableApp = _testableAppFactory.CreateFromDescription(programmingLanguage, solutionType);
+            var runResult = await testableApp.TestAsync(solutionDir, solutionBytes, input);
+
+            if (runResult is None<Result<string, Exception>[], Exception> errorRunResult)
+            {
+                return new None<ProblemEditDto, IActionResult>(BadRequest(new { message = $"Something happened at execution. Error: {errorRunResult.Error.Message}" }));
+            }
+
+            var successRunResult = runResult as Some<Result<string, Exception>[], Exception>;
+            var successResults = successRunResult!.Result
+                .OfType<Some<string, Exception>>()
+                .ToList();
+
+            if (successResults.Count != successRunResult.Result.Length)
+            {
+                return new None<ProblemEditDto, IActionResult>(BadRequest(new { message = "Solution is not working for all the tests" }));
+            }
+
+            solution = new ProblemCreateSolutionDto(
+                solutionBytes,
+                successResults.Select(x => x.Result).ToArray()
+            );
+        }
+
+        var dto = new ProblemEditDto(
+            Guid.Empty,
+            User.GetId(),
+            (ProblemType) HttpContext.Items["ProblemType"]!,
+            title,
+            description,
+            input,
+            solution
+        );
+
+        return new Some<ProblemEditDto, IActionResult>(dto);
     }
 
     [Authorize(Roles = "Admin,Moderator")]

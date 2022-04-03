@@ -18,7 +18,7 @@ public class ProblemsService: IProblemsService
         _context = context;
     }
 
-    public async Task<Result<bool, Exception>> CreateAsync(ProblemCreateDto problem)
+    public async Task<Result<Problem, Exception>> CreateAsync(ProblemCreateDto problem)
     {
         var entity = new Problem
         {
@@ -51,10 +51,78 @@ public class ProblemsService: IProblemsService
 
         if (executeResult is None<bool, Exception> { Error: {} exception })
         {
-            return new None<bool, Exception>(exception);
+            return new None<Problem, Exception>(exception);
         }
 
-        return new Some<bool, Exception>(true);
+        return new Some<Problem, Exception>(entity);
+    }
+
+    public async Task<Result<Problem, Exception>> EditAsync(ProblemEditDto problem, bool isAdmin)
+    {
+        var entityQuery = _context.Problems.AsQueryable();
+
+        var hasNewSolution = problem.Solution is not null;
+        if (hasNewSolution)
+        {
+            entityQuery = entityQuery.Include(x => x.Solutions)
+                .ThenInclude(x => x.SolutionResult)
+                .ThenInclude(x => x.ResultValues);
+        }
+
+        var entity = await entityQuery
+            .FirstOrDefaultAsync(x => x.Id == problem.Id && (isAdmin || x.AuthorId == problem.AuthorId));
+
+        if (entity is null)
+        {
+            return new None<Problem, Exception>(new Exception("Operation not allowed. Not owner or not admin"));
+        }
+
+        entity.Type = problem.Type;
+        entity.Title = problem.Title;
+        entity.Description = problem.Description;
+        entity.Input = problem.Input ?? entity.Input;
+
+        var oldAuthorSolution = hasNewSolution ? entity.Solutions.First(s => s.IsAuthored) : null;
+
+        if (hasNewSolution)
+        {
+            entity.Solutions = entity.Solutions
+                .Where(s => !s.IsAuthored)
+                .Concat(new []
+                {
+                    new Solution {
+                        AuthorId = entity.AuthorId,
+                        Source = problem.Solution!.Source,
+                        SolutionResult = new SolutionResult
+                        {
+                            ResultValues = problem.Solution.Outputs
+                                .Select(x => new ResultValue {Value = x})
+                                .ToList()
+                        },
+                        IsAuthored = true,
+                    }
+                })
+                .ToList();
+        }
+
+        var executeResult = await Ops.RunCatchingAsync(async () =>
+        {
+            if (hasNewSolution)
+            {
+                _context.ResultValues.RemoveRange(oldAuthorSolution.SolutionResult.ResultValues);
+                _context.SolutionResults.Remove(oldAuthorSolution.SolutionResult);
+                _context.Solutions.Remove(oldAuthorSolution);
+            }
+
+            await _context.SaveChangesAsync();
+        });
+
+        if (executeResult is None<bool, Exception> { Error: {} exception })
+        {
+            return new None<Problem, Exception>(exception);
+        }
+
+        return new Some<Problem, Exception>(entity);
     }
 
     public IEnumerable<ProblemTypeDescription> GetAllDescriptions() => ProblemTypeDescription.List;

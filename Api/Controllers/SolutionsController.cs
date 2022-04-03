@@ -151,18 +151,20 @@ public class SolutionsController: ControllerBase
             })
             .ToList();
 
-        if (shouldSave)
-        {
-            var dto = new SolutionCreateDto(
-                problemId,
-                User.GetId(),
-                source,
-                results
-            );
-            await _solutionsService.CreateAsync(dto);
-        }
+        var id = shouldSave
+            ? await _solutionsService.CreateAsync(new SolutionCreateDto(
+                    problemId,
+                    User.GetId(),
+                    source,
+                    results
+                )) switch
+                {
+                    Some<Guid, Exception> { Result: { } resultId } => resultId,
+                    _ => Guid.Empty,
+                }
+            : Guid.Empty;
 
-        return Ok(results);
+        return Ok(new { id, attempts = results, });
     }
 
     [HttpGet]

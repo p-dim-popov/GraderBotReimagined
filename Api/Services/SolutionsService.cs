@@ -16,7 +16,7 @@ public class SolutionsService: ISolutionsService
         _context = context;
     }
 
-    public async Task<Result<bool, Exception>> CreateAsync(SolutionCreateDto solution)
+    public async Task<Result<Guid, Exception>> CreateAsync(SolutionCreateDto solution)
     {
         var entity = new Solution
         {
@@ -39,10 +39,10 @@ public class SolutionsService: ISolutionsService
 
         if (executeResult is None<bool, Exception> { Error: {} exception })
         {
-            return new None<bool, Exception>(exception);
+            return new None<Guid, Exception>(exception);
         }
 
-        return new Some<bool, Exception>(true);
+        return new Some<Guid, Exception>(entity.Id);
     }
 
     public IQueryable<Solution> GetFilteredById(Guid id) => _context.Solutions.Where(x => x.Id == id);

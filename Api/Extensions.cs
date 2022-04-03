@@ -1,16 +1,12 @@
+using System.Net;
 using System.Text;
-using Api.Helpers;
 using Api.Helpers.Authorization;
 using Api.Services;
 using Api.Services.Abstractions;
 using Data.DbContexts;
-using Data.Models.Enums;
-using Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.IdentityModel.Tokens;
-using Runners;
-using Runners.Abstractions;
 
 namespace Api;
 
@@ -35,6 +31,40 @@ public static class ServiceCollectionExtensions
             })
             .AddJwtBearer(options =>
             {
+                options.Events = new JwtBearerEvents {
+                    OnMessageReceived = (context) => {
+                        if (!context.Request.Query.TryGetValue("access_token", out var values)) {
+                            return Task.CompletedTask;
+                        }
+
+                        if (values.Count > 1) {
+                            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            context.Fail(
+                                "Only one 'access_token' query string parameter can be defined. " +
+                                $"However, {values.Count:N0} were included in the request."
+                            );
+
+                            return Task.CompletedTask;
+                        }
+
+                        var token = values.Single();
+
+                        if (string.IsNullOrWhiteSpace(token)) {
+                            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            context.Fail(
+                                "The 'access_token' query string parameter was defined, " +
+                                "but a value to represent the token was not included."
+                            );
+
+                            return Task.CompletedTask;
+                        }
+
+                        context.Token = token;
+
+                        return Task.CompletedTask;
+                    }
+                };
+
                 var secret = jwtSettings.Secret;
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters

@@ -6,7 +6,7 @@ namespace Api.Services.Abstractions;
 
 public interface ISolutionsService
 {
-    Task<Result<bool, Exception>> CreateAsync(SolutionCreateDto solution);
+    Task<Result<Guid, Exception>> CreateAsync(SolutionCreateDto solution);
 
     IQueryable<Solution> GetFilteredById(Guid id);
 

@@ -130,7 +130,7 @@ public class ProblemsService: IProblemsService
     public async Task<ProblemTypeDescription> FetchMostRecentAsync(Guid userId)
     {
         var allSolutionsOrdered = _context.Solutions
-            .OrderBy(x => x.CreatedOn);
+            .OrderByDescending(x => x.CreatedOn);
 
         var problemType = (userId != Guid.Empty
                               ? await allSolutionsOrdered

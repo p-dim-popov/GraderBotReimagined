@@ -99,14 +99,18 @@ public class SolutionsController: ControllerBase
             })
             .FirstOrDefaultAsync();
 
+        var userId = User.GetId();
+        var isAdmin = User.IsInRole("Admin");
+        var isOwner = solution?.AuthorId == userId;
+        var isCreator = solution?.ProblemAuthorId == userId;
+        if (!isOwner && !isCreator && !isAdmin)
+        {
+            return BadRequest(new { message = "Only the solution author, problem author or an admin can download solutions" });
+        }
+
         if (solution is null)
         {
             return NotFound();
-        }
-
-        if (solution.AuthorId != User.GetId() && solution.ProblemAuthorId != User.GetId() && !User.IsInRole("Admin"))
-        {
-            return BadRequest(new { message = "Only the solution author, problem author or an admin can download solutions" });
         }
 
         return File(solution.Source, "application/octet-stream", solution.ProblemTitle);

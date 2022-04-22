@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Api.Helpers;
 using Api.Helpers.Authorization;
 using Api.Models.Problem;
@@ -32,30 +33,37 @@ public class ProblemsController : ControllerBase
         _testableAppFactory = testableAppFactory;
     }
 
-    [HttpGet("/{programmingLanguage:required}/{solutionType:required}/problems")]
-    [AttachProblemType]
-    public async Task<ActionResult<List<ProblemResponse>>> List(string programmingLanguage, string solutionType)
+    public record ListFilters(BriefProblemTypeDescription? ProblemType, string[]? Authors);
+
+    [HttpGet]
+    public async Task<ActionResult<List<ProblemResponse>>> List([FromQuery] ListFilters? filters)
     {
-        var type = ProblemTypeResolver.Resolve(programmingLanguage, solutionType);
+        var query = _problemsService.GetAll();
 
-        var problems = type switch
+        if (filters is not null)
         {
-            { } t => await _problemsService.GetFilteredByType(t)
-                .Select(x => new
-                {
-                    x.Id,
-                    x.Title,
-                    x.Description,
-                    x.Type,
-                    AuthorEmail = x.Author.Email
-                })
-                .ToListAsync(),
-            _ => null,
-        };
+            if (filters.Authors is not null) query = query.WhereAnyMatches(x => x.Author.Email, filters.Authors);
 
-        var response = problems switch
-        {
-            { } p => p.Select(x => new ProblemResponse(
+            if (filters.ProblemType is not null)
+            {
+                var type = ProblemTypeResolver.Resolve(filters.ProblemType.ProgrammingLanguage, filters.ProblemType.SolutionType);
+                query = query.Where(x => x.Type == type);
+            }
+        }
+
+        var problems = await query
+            .Select(x => new
+            {
+                x.Id,
+                x.Title,
+                x.Description,
+                x.Type,
+                AuthorEmail = x.Author.Email
+            })
+            .ToListAsync();
+
+        var response = problems
+            .Select(x => new ProblemResponse(
                 x.Id,
                 x.Title,
                 x.Description,
@@ -64,15 +72,9 @@ public class ProblemsController : ControllerBase
                     .First(y => y.Type == x.Type),
                 x.AuthorEmail
             ))
-                .ToList(),
-            _ => null,
-        };
+            .ToList();
 
-        return response switch
-        {
-            { } => Ok(response),
-            _ => NotFound(),
-        };
+        return Ok(response);
     }
 
     [HttpGet("{id:guid:required}")]

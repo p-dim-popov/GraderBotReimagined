@@ -172,4 +172,6 @@ public class ProblemsService: IProblemsService
 
         return new Some<bool, Exception>(true);
     }
+
+    public IQueryable<Problem> GetAll() => _context.Problems;
 }

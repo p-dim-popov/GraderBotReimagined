@@ -20,4 +20,6 @@ public interface IProblemsService
     IQueryable<Problem> GetFilteredById(Guid id);
 
     Task<Result<bool, Exception>> DeleteAsync(Problem problem);
+
+    IQueryable<Problem> GetAll();
 }

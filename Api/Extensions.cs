@@ -1,5 +1,8 @@
+using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using Api.Helpers.Authorization;
 using Api.Services;
 using Api.Services.Abstractions;
@@ -114,4 +117,27 @@ public static class WebApplicationExtensions
         => condition
             ? app.UseSwagger().UseSwaggerUI()
             : app;
+}
+
+public static class QueryableExtensions
+{
+    public static IQueryable<T> WhereAnyMatches<T>(this IQueryable<T> query, Expression<Func<T, string>> selectComparer, string[] strings)
+    {
+        var matcher = $"{string.Join("|", strings.Select(x => $"({x.ToLower()})"))}";
+
+        var isMatchMethod = typeof(Regex)
+            .GetMethod(nameof(Regex.IsMatch), new []{ typeof(string), typeof(string) })!;
+
+        var listItem = Expression.Parameter(typeof(T), "item");
+
+        return query.Where(
+            Expression.Lambda<Func<T, bool>>(
+                Expression.Call(isMatchMethod,
+                    Expression.Invoke(selectComparer, listItem),
+                    Expression.Constant(matcher)
+                ),
+                listItem
+            )
+        );
+    }
 }

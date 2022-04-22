@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Api.Helpers;
 using Api.Helpers.Authorization;
 using Api.Models.Problem;
@@ -5,6 +6,7 @@ using Api.Models.Solutions;
 using Api.Services.Abstractions;
 using Core.Types;
 using Core.Utilities;
+using Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -174,21 +176,27 @@ public class SolutionsController: ControllerBase
     [HttpGet]
     public async Task<object> List([FromQuery] SolutionsListItemRequest request)
     {
-        var (problemTypeDescription, pagination) = request;
+        var (problemTypeDescription, pagination, filters) = request;
 
-        var query = _solutionsService.GetAll()
-            .OrderByDescending(x => x.CreatedOn)
-            .Where(x => x.AuthorId == User.GetId());
+        IQueryable<Solution> query = _solutionsService.GetAll().OrderByDescending(x => x.CreatedOn);
+
+        var userId = User.GetId();
+
+        if (filters is not null)
+        {
+            if (filters.AuthorsEmails is not null) query = query.WhereAnyMatches(x => x.Author.Email, filters.AuthorsEmails);
+
+            if (filters.ProblemAuthorsEmails is not null) query = query.WhereAnyMatches(x => x.Problem.Author.Email, filters.ProblemAuthorsEmails);
+
+            if (filters.ProblemId is not null) query = query.Where(x => x.ProblemId == filters.ProblemId);
+        } else query = query.Where(x => x.AuthorId == userId);
+
+        if (!User.IsInRole("Admin")) query = query.Where(x => x.AuthorId == userId || x.Problem.AuthorId == userId);
 
         if (problemTypeDescription is var (programmingLanguage, solutionType) && ProblemTypeResolver.Resolve(programmingLanguage, solutionType) is {} type)
-        {
             query = query.Where(x => x.Problem.Type == type);
-        }
 
-        if (pagination is ({} page, {} pageSize))
-        {
-            query = query.Skip(page * pageSize).Take(pageSize);
-        }
+        if (pagination is ({} page, {} pageSize)) query = query.Skip(page * pageSize).Take(pageSize);
 
         var list = await query
             .Select(x => new
@@ -205,6 +213,7 @@ public class SolutionsController: ControllerBase
                         .Select(rv => rv.Value))
                     .First()
                     .ToList(),
+                AuthorEmail = x.Author.Email,
             })
             .ToListAsync();
 
@@ -222,7 +231,8 @@ public class SolutionsController: ControllerBase
                     .Select((x, i) => x == solution.CorrectOutputs[i]
                         ? new SolutionAttempt(x)
                         : new SolutionAttempt(x, solution.CorrectOutputs[i]))
-                    .ToList()
+                    .ToList(),
+                solution.AuthorEmail
             ))
             .ToList();
 

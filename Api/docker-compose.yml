@@ -1,0 +1,46 @@
+version: '2'
+
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  postgresql:
+    image: docker.io/bitnami/postgresql:14
+    ports:
+      - '5432:5432'
+    volumes:
+      - $HOME/graderbot_postgresql_data:/bitnami/postgresql/data
+    environment:
+      - POSTGRESQL_USERNAME=admin
+      - POSTGRESQL_PASSWORD=password1
+      - POSTGRESQL_DATABASE=graderbot
+    networks:
+      - app-tier
+
+  api:
+    image: pdimp/graderbot:api-latest
+    environment:
+      - DB_HOST=postgresql
+      - DB_USER=admin
+      - DB_PASSWORD=password1
+      - DB_DATABASE=graderbot
+      - DB_PORT=5432
+      - ASPNET_SEED_DB=true
+    ports:
+      - '5228:80'
+    networks:
+      - app-tier
+    depends_on:
+        - postgresql
+
+  frontend:
+    image: pdimp/graderbot:frontend-latest
+    ports:
+      - '8080:3000'
+    networks:
+      - app-tier
+
+#volumes:
+#  graderbot_postgresql_data:
+#    driver: local

@@ -1,5 +1,6 @@
 using Data.DbContexts;
 using Data.Seeding.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -27,6 +28,9 @@ public class AppDbSeeder : ISeeder
         }
 
         var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(typeof(AppDbContext));
+
+        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
 
         foreach (var seeder in _seeders)
         {

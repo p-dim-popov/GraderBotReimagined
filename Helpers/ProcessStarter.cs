@@ -34,7 +34,7 @@ public class ProcessStarter: IProcessStarter
 
         if (startResult is None<bool, Exception> errorStartResult)
         {
-            return new None<Process, object>(errorStartResult.Error);
+            throw errorStartResult.Error;
         }
 
         return new Some<Process, object>(process);

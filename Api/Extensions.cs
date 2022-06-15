@@ -87,8 +87,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddConvenientDbContext(this IServiceCollection services, bool isDevelopment)
         => isDevelopment
             ? services.AddDbContext<AppDbContext, LocalDbContext>()
-            // TODO: add a real db at some point
-            : services;
+            : services.AddDbContext<AppDbContext, PgDbContext>();
 }
 
 public static class WebApplicationExtensions

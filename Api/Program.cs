@@ -10,6 +10,9 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ReSharper disable once InconsistentNaming
+const bool OVERRIDE_IS_DEVELOPMENT = false;
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -44,7 +47,7 @@ builder.Services.AddSwaggerGen(swaggerGenOptions =>
 });
 
 builder.Services
-    .AddConvenientDbContext(builder.Environment.IsDevelopment())
+    .AddConvenientDbContext(builder.Environment.IsDevelopment() || OVERRIDE_IS_DEVELOPMENT)
     .AddTransient<IProcessStarter, ProcessStarter>()
     .AddScoped<IProblemsService, ProblemsService>()
     .AddScoped<ISolutionsService, SolutionsService>()
@@ -53,12 +56,12 @@ builder.Services
 
 var app = builder.Build();
 app.UseSwaggerDocsWhen(app.Environment.IsDevelopment())
-    .UseClientSideAppDevelopmentServerWhen(app.Environment.IsDevelopment())
+    .UseClientSideAppDevelopmentServerWhen(app.Environment.IsDevelopment() || OVERRIDE_IS_DEVELOPMENT)
     // .UseHttpsRedirection()
     .UseAuth()
     .UseCors();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || Environment.GetEnvironmentVariable("ASPNET_SEED_DB") is not null)
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetService<AppDbContext>()!;
